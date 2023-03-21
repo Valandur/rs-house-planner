@@ -2,16 +2,22 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
-	import { createEmptyPlot, getExtendedPlots } from '$lib/models/Plot';
+	import { createEmptyPlot, getExtendedPlots, type Plot } from '$lib/models/Plot';
 	import { Direction, rotateClockwise } from '$lib/models/Direction';
 	import { ROOM_TYPES_LIST } from '$lib/models/RoomType';
 	import { FLOORS } from '$lib/models/Floor';
 
 	import { getUrl, parseUrl } from '$lib/utils';
+	import { onMount } from 'svelte';
 
 	let floor = 1;
-	let plots = parseUrl($page.url.searchParams);
+	let plots: Plot[] = [];
 	$: extendedPlots = getExtendedPlots(plots);
+	$: extendedPlot = extendedPlots[floor] || [];
+
+	onMount(() => {
+		plots = parseUrl($page.url.searchParams);
+	});
 
 	$: rooms = extendedPlots
 		.flat(2)
@@ -52,7 +58,7 @@
 <div class="container">
 	<div class="map">
 		<div class="grid">
-			{#each extendedPlots[floor] as row, y}
+			{#each extendedPlot as row, y}
 				<div class="row">
 					{#each row as room, x}
 						{@const selected = x === selX && y === selY}
@@ -86,18 +92,17 @@
 			{#if selX !== null && selY !== null}
 				{@const x = selX}
 				{@const y = selY}
-				{@const plot = extendedPlots[floor]}
 				{@const below = extendedPlots[floor - 1]?.[y][x]}
 				<div
 					class="popup"
-					style:top="{(100 / plot.length) * (y + 1)}%"
-					style:left="{(100 / plot[y].length) * x}%"
+					style:top="{(100 / extendedPlot.length) * (y + 1)}%"
+					style:left="{(100 / extendedPlot[y].length) * x}%"
 				>
 					{#if FLOORS[floor] > 0 && (!below || below.open)}
 						<p>There is no supporting room below!</p>
 					{:else}
 						<select
-							value={plot[y][x]?.type || ''}
+							value={extendedPlot[y][x]?.type || ''}
 							on:change={(e) => setRoom(x, y, e.currentTarget.value)}
 						>
 							<option value="" disabled selected>Pick a room...</option>
@@ -107,7 +112,7 @@
 						</select>
 					{/if}
 
-					{#if plot[y][x]}
+					{#if extendedPlot[y][x]}
 						<button class="rotate" on:click|stopPropagation={() => rotateRoom(x, y)}>⟳</button>
 						<button class="remove" on:click|stopPropagation={() => setRoom(x, y, null)}>x</button>
 					{/if}
@@ -272,7 +277,7 @@
 		&.north {
 			top: 0;
 			height: $door-thickness;
-			left: (100% - $door-size) / 2;
+			left: calc((100% - $door-size) / 2);
 			width: $door-size;
 			border-top: none;
 		}
@@ -280,7 +285,7 @@
 		&.east {
 			right: 0;
 			width: $door-thickness;
-			top: (100% - $door-size) / 2;
+			top: calc((100% - $door-size) / 2);
 			height: $door-size;
 			border-right: none;
 		}
@@ -288,7 +293,7 @@
 		&.south {
 			bottom: 0;
 			height: $door-thickness;
-			left: (100% - $door-size) / 2;
+			left: calc((100% - $door-size) / 2);
 			width: $door-size;
 			border-bottom: none;
 		}
@@ -296,7 +301,7 @@
 		&.west {
 			left: 0;
 			width: $door-thickness;
-			top: (100% - $door-size) / 2;
+			top: calc((100% - $door-size) / 2);
 			height: $door-size;
 			border-left: none;
 		}
