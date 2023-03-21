@@ -45,7 +45,10 @@
 			goto(`?${getUrl(plots)}`, { replaceState: true });
 		}
 	};
-	$: reset = () => (plots[floor] = createEmptyPlot());
+	$: reset = () => {
+		plots[floor] = createEmptyPlot();
+		goto(`?${getUrl(plots)}`, { replaceState: true });
+	};
 
 	let selX: number | null = null;
 	let selY: number | null = null;
@@ -163,7 +166,7 @@
 	</table>
 
 	<h2>Controls</h2>
-	<button on:click={() => reset()}>Reset</button>
+	<button on:click={() => reset()}>Reset this Floor</button>
 </div>
 
 <style lang="scss">
