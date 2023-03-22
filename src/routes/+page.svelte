@@ -1,52 +1,52 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
-	import { createEmptyPlot, getExtendedPlots, type Plot } from '$lib/models/Plot';
+	import { createEmptyPlot, getExtendedPlots, SIZE_X, SIZE_Y, type Plot } from '$lib/models/Plot';
 	import { Direction, rotateClockwise } from '$lib/models/Direction';
 	import { ROOM_TYPES_LIST } from '$lib/models/RoomType';
-	import { FLOORS } from '$lib/models/Floor';
+	import { FLOORS, MAX_FLOOR, MIN_FLOOR } from '$lib/models/Floor';
+	import { getStats } from '$lib/models/Stats';
 
 	import { getUrl, parseUrl } from '$lib/utils';
-	import { onMount } from 'svelte';
 
-	let floor = 1;
+	let floorIndex = Math.max(0, FLOORS.indexOf(0));
+	$: floor = FLOORS[floorIndex];
+
 	let plots: Plot[] = [];
 	$: extendedPlots = getExtendedPlots(plots);
-	$: extendedPlot = extendedPlots[floor] || [];
+	$: extendedPlot = extendedPlots[floorIndex] || [];
+	$: stats = getStats(extendedPlots);
+
+	let showLevelDetails = false;
 
 	onMount(() => {
 		plots = parseUrl($page.url.searchParams);
 	});
 
-	$: rooms = extendedPlots
-		.flat(2)
-		.filter((room) => !!room)
-		.map((room) => room);
-	$: groupedRooms = ROOM_TYPES_LIST.map(
-		([key, type]) => [type, rooms.filter((room) => room?.type === key)] as const
-	).sort(([, a], [, b]) => b.length - a.length);
-	$: totalPrice = rooms.reduce((acc, curr) => acc + (curr?.cost || 0), 0);
-	$: minLevel = rooms.reduce((acc, curr) => Math.max(acc, curr?.minLvl || 0), 0);
-
 	$: setRoom = (x: number, y: number, type: string | null) => {
 		if (type === null) {
-			plots[floor][y][x] = null;
+			plots[floorIndex][y][x] = null;
 		} else {
-			plots[floor][y][x] = { type, orientation: Direction.North };
+			plots[floorIndex][y][x] = { type, orientation: Direction.North };
 		}
 
 		goto(`?${getUrl(plots)}`, { replaceState: true });
 	};
 	$: rotateRoom = (x: number, y: number) => {
-		const room = plots[floor][y][x];
+		const room = plots[floorIndex][y][x];
 		if (room) {
-			plots[floor][y][x] = { ...room, orientation: rotateClockwise(room.orientation) };
+			plots[floorIndex][y][x] = { ...room, orientation: rotateClockwise(room.orientation) };
 			goto(`?${getUrl(plots)}`, { replaceState: true });
 		}
 	};
 	$: reset = () => {
-		plots[floor] = createEmptyPlot();
+		if (!confirm('Are you sure you want to delete all rooms on this floor?')) {
+			return;
+		}
+
+		plots[floorIndex] = createEmptyPlot();
 		goto(`?${getUrl(plots)}`, { replaceState: true });
 	};
 
@@ -80,12 +80,12 @@
 									<div class="door {name}" class:connected />
 								{/each}
 							{:else}
-								{@const below = extendedPlots[floor - 1]?.[y][x]}
-								{#if below}
-									<div class="content below" class:supported={!below.open}>
+								{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
+								<div class="content" class:below={!!below} class:supported={below && !below.open}>
+									{#if below}
 										<div class="title">{below.name}</div>
-									</div>
-								{/if}
+									{/if}
+								</div>
 							{/if}
 						</div>
 					{/each}
@@ -93,15 +93,19 @@
 			{/each}
 
 			{#if selX !== null && selY !== null}
-				{@const x = selX}
 				{@const y = selY}
-				{@const below = extendedPlots[floor - 1]?.[y][x]}
+				{@const yRatio = 100 / extendedPlot.length}
+				{@const x = selX}
+				{@const xRatio = 100 / extendedPlot[y].length}
+				{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
 				<div
 					class="popup"
-					style:top="{(100 / extendedPlot.length) * (y + 1)}%"
-					style:left="{(100 / extendedPlot[y].length) * x}%"
+					style:top={y < SIZE_Y - 2 ? `${yRatio * (y + 1)}%` : ''}
+					style:bottom={y >= SIZE_Y - 2 ? `${yRatio * (SIZE_Y - y)}%` : ''}
+					style:left={x < SIZE_X - 2 ? `${xRatio * x}%` : ''}
+					style:right={x >= SIZE_X - 2 ? `${xRatio * (SIZE_X - x - 1)}%` : ''}
 				>
-					{#if FLOORS[floor] > 0 && (!below || below.open)}
+					{#if floor > 0 && (!below || below.open)}
 						<p>There is no supporting room below!</p>
 					{:else}
 						<select
@@ -116,8 +120,12 @@
 					{/if}
 
 					{#if extendedPlot[y][x]}
-						<button class="rotate" on:click|stopPropagation={() => rotateRoom(x, y)}>⟳</button>
-						<button class="remove" on:click|stopPropagation={() => setRoom(x, y, null)}>x</button>
+						<button class="rotate" on:click|stopPropagation={() => rotateRoom(x, y)}>
+							<i class="icofont-ui-rotation" />
+						</button>
+						<button class="remove" on:click|stopPropagation={() => setRoom(x, y, null)}>
+							<i class="icofont-ui-delete" />
+						</button>
 					{/if}
 				</div>
 			{/if}
@@ -131,15 +139,67 @@
 	on:keypress={() => setSelected(null, null)}
 >
 	<h2>Floor</h2>
-	<select bind:value={floor}>
-		{#each FLOORS as label, floor}
-			<option value={floor}>Floor {label}</option>
-		{/each}
-	</select>
+	<div>
+		<div style="margin-bottom: 8px">
+			<button disabled={floor >= MAX_FLOOR} on:click={() => floorIndex++}>
+				<i class="icofont-arrow-up" />
+			</button>
+		</div>
+		<div style="display: flex; flex-direction: row; margin-bottom: 8px">
+			<select style="margin-right: 8px" bind:value={floorIndex}>
+				{#each FLOORS as label, floor}
+					<option value={floor}>Floor {label}</option>
+				{/each}
+			</select>
+			<button on:click={() => reset()}>Reset this Floor</button>
+		</div>
+		<div>
+			<button disabled={floor <= MIN_FLOOR} on:click={() => floorIndex--}>
+				<i class="icofont-arrow-down" />
+			</button>
+		</div>
+	</div>
 
 	<h2>Info</h2>
-	<div>Cost: {totalPrice}</div>
-	<div>Level: {minLevel}</div>
+	<div class="alerts">
+		{#each stats.errors as error}
+			<div class="alert error">{error}</div>
+		{/each}
+	</div>
+	<div>Cost: {stats.totalPrice}</div>
+	<div>Extent: {stats.extent[0]}x{stats.extent[1]}</div>
+	<div>
+		Level: {stats.levelRequirements[0]?.level || 0}
+		{#if stats.levelRequirements.length > 0}
+			<button class="small" on:click={() => (showLevelDetails = !showLevelDetails)}>
+				<i class="icofont-info-circle" />
+			</button>
+		{/if}
+	</div>
+	{#if showLevelDetails && stats.levelRequirements.length > 0}
+		<div>
+			<table>
+				<thead>
+					<tr>
+						<th>Requirement</th>
+						<th>Current</th>
+						<th>Limit</th>
+						<th>Min. Level</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each stats.levelRequirements as req}
+						<tr class:max={req.level === stats.levelRequirements[0].level}>
+							<td>{req.name}</td>
+							<td>{req.value}</td>
+							<td>{req.limit}</td>
+							<td>{req.level}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
 
 	<h2>Rooms</h2>
 	<table>
@@ -153,7 +213,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each groupedRooms as [type, rooms]}
+			{#each stats.groupedRooms as { type, rooms }}
 				<tr>
 					<td>{type.name}</td>
 					<td class="number">{type.minLvl}</td>
@@ -164,9 +224,6 @@
 			{/each}
 		</tbody>
 	</table>
-
-	<h2>Controls</h2>
-	<button on:click={() => reset()}>Reset this Floor</button>
 </div>
 
 <style lang="scss">
@@ -227,15 +284,28 @@
 	}
 
 	.cell {
+		/* For some reason making the flex-basis the size of the border fixes 
+		 * the cells using different space for different border widths
+		 */
 		flex: 1;
+		width: 0;
 		position: relative;
-		box-sizing: border-box;
-		border: 1px solid white;
 		overflow: hidden;
+		background-color: white;
 
 		&.selected {
-			border: 1px solid blue;
 			background-color: blue;
+
+			.content {
+				top: 2px;
+				left: 2px;
+				right: 2px;
+				bottom: 2px;
+
+				.title {
+					margin: 7px;
+				}
+			}
 		}
 
 		&.north .marker {
@@ -271,10 +341,11 @@
 		position: absolute;
 		z-index: 10;
 		box-sizing: border-box;
-		background-color: rgba(0, 0, 0, 0.6);
+		background-color: black;
 
 		&.connected {
 			background-color: rgb(222, 184, 135);
+			border: 1px solid black;
 		}
 
 		&.north {
@@ -312,17 +383,18 @@
 
 	.content {
 		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
+		top: 1px;
+		left: 1px;
+		right: 1px;
+		bottom: 1px;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+		background-color: black;
 
 		&.supported {
-			background-color: rgb(50, 50, 50);
+			background-color: rgb(80, 80, 80);
 		}
 
 		.title {
@@ -376,6 +448,26 @@
 
 			&.number {
 				text-align: right;
+			}
+		}
+
+		.max td {
+			background-color: #de7309;
+		}
+	}
+
+	.alerts {
+		margin-bottom: 12px;
+
+		.alert {
+			box-sizing: border-box;
+			border: 1px solid white;
+			background-color: gray;
+			margin: 0;
+			padding: 8px;
+
+			&.error {
+				background-color: darkred;
 			}
 		}
 	}

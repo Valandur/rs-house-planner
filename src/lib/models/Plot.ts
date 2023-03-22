@@ -28,6 +28,8 @@ export const getExtendedPlots = (plots: Plot[]): ExtendedPlot[] => {
 				const type = ROOM_TYPES[room.type];
 				extendedPlot[y].push({
 					...type,
+					x,
+					y,
 					type: room.type,
 					doors: type.doors
 						.map((door) => rotateClockwise(door, room.orientation))

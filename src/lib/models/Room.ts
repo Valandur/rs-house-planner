@@ -18,5 +18,7 @@ export interface ExtendedRoom {
 	bg: string;
 
 	// From room
+	x: number;
+	y: number;
 	orientation: string;
 }
