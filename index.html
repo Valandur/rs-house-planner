@@ -6,140 +6,144 @@
 		<meta name="viewport" content="width=device-width" />
 		<title>RS - House Planner</title>
 		<meta http-equiv="content-security-policy" content="">
-		<link href="./_app/immutable/assets/_layout.ee16753c.css" rel="stylesheet">
-		<link href="./_app/immutable/assets/_page.a1d42caf.css" rel="stylesheet">
-		<link rel="modulepreload" href="./_app/immutable/entry/start.79ad6705.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/index.49a96b02.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/singletons.4e124f00.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/app.437724e1.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/_layout.svelte.229661b9.js">
+		<link href="./_app/immutable/assets/_layout.4dc5772b.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/_page.f2efc941.css" rel="stylesheet">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.5e2c61ed.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/index.5c36ea89.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/singletons.088978ab.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.d4eae884.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/_layout.svelte.d506560d.js">
 		<link rel="modulepreload" href="./_app/immutable/entry/_layout.ts.984db11e.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/_layout.da46b06b.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/_page.svelte.c9612b82.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/stores.0c813ced.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/_page.svelte.e32b35ce.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/stores.dbc49f05.js">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">
 
 
-<div class="container svelte-1rmwsj"><div class="map svelte-1rmwsj"><div class="grid svelte-1rmwsj">
+<div class="container svelte-1sxsjzc"><div class="map svelte-1sxsjzc"><div class="grid svelte-1sxsjzc">
 
 			</div></div></div>
 
-<div class="stats svelte-1rmwsj"><h2 class="svelte-1rmwsj">Floor</h2>
-	<select><option value="0">Floor -1</option><option value="1">Floor 0</option><option value="2">Floor 1</option></select>
+<div class="stats svelte-1sxsjzc"><h2 class="svelte-1sxsjzc">Floor</h2>
+	<div><div style="margin-bottom: 8px"><button ><i class="icofont-arrow-up"></i></button></div>
+		<div style="display: flex; flex-direction: row; margin-bottom: 8px"><select style="margin-right: 8px"><option value="0">Floor -1</option><option value="1">Floor 0</option><option value="2">Floor 1</option></select>
+			<button>Reset this Floor</button></div>
+		<div><button ><i class="icofont-arrow-down"></i></button></div></div>
 
-	<h2 class="svelte-1rmwsj">Info</h2>
+	<h2 class="svelte-1sxsjzc">Info</h2>
+	<div class="alerts svelte-1sxsjzc"></div>
 	<div>Cost: 0</div>
-	<div>Level: 0</div>
+	<div>Extent: 0x0</div>
+	<div>Level: 0
+		</div>
+	
 
-	<h2 class="svelte-1rmwsj">Rooms</h2>
-	<table class="svelte-1rmwsj"><thead><tr><th class="svelte-1rmwsj">Type</th>
-				<th class="svelte-1rmwsj">Level</th>
-				<th class="svelte-1rmwsj">Cost</th>
-				<th class="svelte-1rmwsj">Amount</th>
-				<th class="svelte-1rmwsj">Total</th></tr></thead>
-		<tbody><tr><td class="svelte-1rmwsj">Aquarium</td>
-					<td class="number svelte-1rmwsj">63</td>
-					<td class="number svelte-1rmwsj">200000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Bedroom</td>
-					<td class="number svelte-1rmwsj">20</td>
-					<td class="number svelte-1rmwsj">10000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Chapel</td>
-					<td class="number svelte-1rmwsj">45</td>
-					<td class="number svelte-1rmwsj">50000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Combat Room</td>
-					<td class="number svelte-1rmwsj">30</td>
-					<td class="number svelte-1rmwsj">25000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Costume Room</td>
-					<td class="number svelte-1rmwsj">42</td>
-					<td class="number svelte-1rmwsj">50000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Dining Room</td>
-					<td class="number svelte-1rmwsj">10</td>
-					<td class="number svelte-1rmwsj">5000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Formal Garden</td>
-					<td class="number svelte-1rmwsj">55</td>
-					<td class="number svelte-1rmwsj">75000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Games Room</td>
-					<td class="number svelte-1rmwsj">30</td>
-					<td class="number svelte-1rmwsj">25000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Garden</td>
-					<td class="number svelte-1rmwsj">1</td>
-					<td class="number svelte-1rmwsj">1000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Kitchen</td>
-					<td class="number svelte-1rmwsj">5</td>
-					<td class="number svelte-1rmwsj">5000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Menagerie</td>
-					<td class="number svelte-1rmwsj">37</td>
-					<td class="number svelte-1rmwsj">30000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Parlour</td>
-					<td class="number svelte-1rmwsj">1</td>
-					<td class="number svelte-1rmwsj">1000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Portal Chamber</td>
-					<td class="number svelte-1rmwsj">50</td>
-					<td class="number svelte-1rmwsj">100000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Quest Hall</td>
-					<td class="number svelte-1rmwsj">32</td>
-					<td class="number svelte-1rmwsj">25000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Skill Hall</td>
-					<td class="number svelte-1rmwsj">25</td>
-					<td class="number svelte-1rmwsj">15000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Study</td>
-					<td class="number svelte-1rmwsj">40</td>
-					<td class="number svelte-1rmwsj">50000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Throne Room</td>
-					<td class="number svelte-1rmwsj">60</td>
-					<td class="number svelte-1rmwsj">150000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
-				</tr><tr><td class="svelte-1rmwsj">Workshop</td>
-					<td class="number svelte-1rmwsj">15</td>
-					<td class="number svelte-1rmwsj">10000</td>
-					<td class="number svelte-1rmwsj">-</td>
-					<td class="number svelte-1rmwsj">-</td>
+	<h2 class="svelte-1sxsjzc">Rooms</h2>
+	<table class="svelte-1sxsjzc"><thead><tr><th class="svelte-1sxsjzc">Type</th>
+				<th class="svelte-1sxsjzc">Level</th>
+				<th class="svelte-1sxsjzc">Cost</th>
+				<th class="svelte-1sxsjzc">Amount</th>
+				<th class="svelte-1sxsjzc">Total</th></tr></thead>
+		<tbody><tr><td class="svelte-1sxsjzc">Aquarium</td>
+					<td class="number svelte-1sxsjzc">63</td>
+					<td class="number svelte-1sxsjzc">200000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Bedroom</td>
+					<td class="number svelte-1sxsjzc">20</td>
+					<td class="number svelte-1sxsjzc">10000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Chapel</td>
+					<td class="number svelte-1sxsjzc">45</td>
+					<td class="number svelte-1sxsjzc">50000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Combat Room</td>
+					<td class="number svelte-1sxsjzc">30</td>
+					<td class="number svelte-1sxsjzc">25000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Costume Room</td>
+					<td class="number svelte-1sxsjzc">42</td>
+					<td class="number svelte-1sxsjzc">50000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Dining Room</td>
+					<td class="number svelte-1sxsjzc">10</td>
+					<td class="number svelte-1sxsjzc">5000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Formal Garden</td>
+					<td class="number svelte-1sxsjzc">55</td>
+					<td class="number svelte-1sxsjzc">75000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Games Room</td>
+					<td class="number svelte-1sxsjzc">30</td>
+					<td class="number svelte-1sxsjzc">25000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Garden</td>
+					<td class="number svelte-1sxsjzc">1</td>
+					<td class="number svelte-1sxsjzc">1000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Kitchen</td>
+					<td class="number svelte-1sxsjzc">5</td>
+					<td class="number svelte-1sxsjzc">5000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Menagerie</td>
+					<td class="number svelte-1sxsjzc">37</td>
+					<td class="number svelte-1sxsjzc">30000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Parlour</td>
+					<td class="number svelte-1sxsjzc">1</td>
+					<td class="number svelte-1sxsjzc">1000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Portal Chamber</td>
+					<td class="number svelte-1sxsjzc">50</td>
+					<td class="number svelte-1sxsjzc">100000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Quest Hall</td>
+					<td class="number svelte-1sxsjzc">32</td>
+					<td class="number svelte-1sxsjzc">25000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Skill Hall</td>
+					<td class="number svelte-1sxsjzc">25</td>
+					<td class="number svelte-1sxsjzc">15000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Study</td>
+					<td class="number svelte-1sxsjzc">40</td>
+					<td class="number svelte-1sxsjzc">50000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Throne Room</td>
+					<td class="number svelte-1sxsjzc">60</td>
+					<td class="number svelte-1sxsjzc">150000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
+				</tr><tr><td class="svelte-1sxsjzc">Workshop</td>
+					<td class="number svelte-1sxsjzc">15</td>
+					<td class="number svelte-1sxsjzc">10000</td>
+					<td class="number svelte-1sxsjzc">-</td>
+					<td class="number svelte-1sxsjzc">-</td>
 				</tr></tbody></table>
-
-	<h2 class="svelte-1rmwsj">Controls</h2>
-	<button>Reset this Floor</button>
 </div>
 
 
 			
 			<script>
 				{
-					__sveltekit_ttwr82 = {
+					__sveltekit_ekpa9i = {
 						env: {},
 						base: new URL(".", location).pathname.slice(0, -1),
 						element: document.currentScript.parentElement
@@ -148,10 +152,10 @@
 					const data = [null,null];
 
 					Promise.all([
-						import("./_app/immutable/entry/start.79ad6705.js"),
-						import("./_app/immutable/entry/app.437724e1.js")
+						import("./_app/immutable/entry/start.5e2c61ed.js"),
+						import("./_app/immutable/entry/app.d4eae884.js")
 					]).then(([kit, app]) => {
-						kit.start(app, __sveltekit_ttwr82.element, {
+						kit.start(app, __sveltekit_ekpa9i.element, {
 							node_ids: [0, 2],
 							data,
 							form: null,
@@ -161,5 +165,6 @@
 				}
 			</script>
 		</div>
+		<link rel="stylesheet" href="/icofont/icofont.min.css" />
 	</body>
 </html>
