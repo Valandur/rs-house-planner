@@ -19,8 +19,6 @@
 	$: extendedPlot = extendedPlots[floorIndex] || [];
 	$: stats = getStats(extendedPlots);
 
-	let showLevelDetails = false;
-
 	onMount(() => {
 		plots = parseUrl($page.url.searchParams);
 	});
@@ -58,126 +56,141 @@
 	};
 </script>
 
-<div class="container">
-	<div class="map">
-		<div class="grid">
-			{#each extendedPlot as row, y}
-				<div class="row">
-					{#each row as room, x}
-						{@const selected = x === selX && y === selY}
-						<div
-							class="cell {room?.orientation || ''}"
-							class:selected
-							on:click={() => setSelected(x, y)}
-							on:keypress={() => setSelected(x, y)}
-						>
-							{#if room !== null}
-								<div class="marker" />
-								<div class="content" style:background-color={room.bg}>
-									<div class="title">{room.name}</div>
-								</div>
-								{#each room.doors as { name, connected }}
-									<div class="door {name}" class:connected />
-								{/each}
-							{:else}
-								{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
-								<div class="content" class:below={!!below} class:supported={below && !below.open}>
-									{#if below}
-										<div class="title">{below.name}</div>
-									{/if}
-								</div>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{/each}
-
-			{#if selX !== null && selY !== null}
-				{@const y = selY}
-				{@const yRatio = 100 / extendedPlot.length}
-				{@const x = selX}
-				{@const xRatio = 100 / extendedPlot[y].length}
-				{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
-				<div
-					class="popup"
-					style:top={y < SIZE_Y - 2 ? `${yRatio * (y + 1)}%` : ''}
-					style:bottom={y >= SIZE_Y - 2 ? `${yRatio * (SIZE_Y - y)}%` : ''}
-					style:left={x < SIZE_X - 2 ? `${xRatio * x}%` : ''}
-					style:right={x >= SIZE_X - 2 ? `${xRatio * (SIZE_X - x - 1)}%` : ''}
-				>
-					{#if floor > 0 && (!below || below.open)}
-						<p>There is no supporting room below!</p>
-					{:else}
-						<select
-							value={extendedPlot[y][x]?.type || ''}
-							on:change={(e) => setRoom(x, y, e.currentTarget.value)}
-						>
-							<option value="" disabled selected>Pick a room...</option>
-							{#each ROOM_TYPES_LIST as [key, type]}
-								<option value={key}>{type.name}</option>
+<div class="map">
+	<div class="grid">
+		{#each extendedPlot as row, y}
+			<div class="row">
+				{#each row as room, x}
+					{@const selected = x === selX && y === selY}
+					<div
+						class="cell {room?.orientation || ''}"
+						class:selected
+						on:click={() => setSelected(x, y)}
+						on:keypress={() => setSelected(x, y)}
+					>
+						{#if room !== null}
+							<div class="marker" />
+							<div class="content" style:background-color={room.bg}>
+								<div class="title">{room.name}</div>
+							</div>
+							{#each room.doors as { name, connected }}
+								<div class="door {name}" class:connected />
 							{/each}
-						</select>
-					{/if}
+						{:else}
+							{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
+							<div class="content" class:below={!!below} class:supported={below && !below.open}>
+								{#if below}
+									<div class="title">{below.name}</div>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/each}
 
-					{#if extendedPlot[y][x]}
-						<button class="rotate" on:click|stopPropagation={() => rotateRoom(x, y)}>
-							<i class="icofont-ui-rotation" />
-						</button>
-						<button class="remove" on:click|stopPropagation={() => setRoom(x, y, null)}>
-							<i class="icofont-ui-delete" />
-						</button>
-					{/if}
-				</div>
-			{/if}
-		</div>
+		{#if selX !== null && selY !== null}
+			{@const y = selY}
+			{@const yRatio = 100 / extendedPlot.length}
+			{@const x = selX}
+			{@const xRatio = 100 / extendedPlot[y].length}
+			{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
+			<div
+				class="popup"
+				style:top={y < SIZE_Y - 2 ? `${yRatio * (y + 1)}%` : ''}
+				style:bottom={y >= SIZE_Y - 2 ? `${yRatio * (SIZE_Y - y)}%` : ''}
+				style:left={x < SIZE_X - 2 ? `${xRatio * x}%` : ''}
+				style:right={x >= SIZE_X - 2 ? `${xRatio * (SIZE_X - x - 1)}%` : ''}
+			>
+				{#if floor > 0 && (!below || below.open)}
+					<p>There is no supporting room below!</p>
+				{:else}
+					<select
+						value={extendedPlot[y][x]?.type || ''}
+						on:change={(e) => setRoom(x, y, e.currentTarget.value)}
+					>
+						<option value="" disabled selected>Pick a room...</option>
+						{#each ROOM_TYPES_LIST as [key, type]}
+							<option value={key}>{type.name}</option>
+						{/each}
+					</select>
+				{/if}
+
+				{#if extendedPlot[y][x]}
+					<button class="rotate" on:click|stopPropagation={() => rotateRoom(x, y)}>
+						<i class="icofont-ui-rotation" />
+					</button>
+					<button class="remove" on:click|stopPropagation={() => setRoom(x, y, null)}>
+						<i class="icofont-ui-delete" />
+					</button>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </div>
 
 <div
-	class="stats"
+	class="sidebar"
 	on:click={() => setSelected(null, null)}
 	on:keypress={() => setSelected(null, null)}
 >
-	<h2>Floor</h2>
-	<div>
-		<div style="margin-bottom: 8px">
-			<button disabled={floor >= MAX_FLOOR} on:click={() => floorIndex++}>
-				<i class="icofont-arrow-up" />
-			</button>
-		</div>
-		<div style="display: flex; flex-direction: row; margin-bottom: 8px">
-			<select style="margin-right: 8px" bind:value={floorIndex}>
-				{#each FLOORS as label, floor}
-					<option value={floor}>Floor {label}</option>
-				{/each}
-			</select>
-			<button on:click={() => reset()}>Reset this Floor</button>
-		</div>
-		<div>
-			<button disabled={floor <= MIN_FLOOR} on:click={() => floorIndex--}>
-				<i class="icofont-arrow-down" />
-			</button>
-		</div>
+	<div class="floor-controls">
+		<button disabled={floor >= MAX_FLOOR} on:click|stopPropagation={() => floorIndex++}>
+			<i class="icofont-arrow-up" />
+		</button>
+		<select bind:value={floorIndex}>
+			{#each FLOORS as label, floor}
+				<option value={floor}>Floor {label}</option>
+			{/each}
+		</select>
+		<button disabled={floor <= MIN_FLOOR} on:click|stopPropagation={() => floorIndex--}>
+			<i class="icofont-arrow-down" />
+		</button>
+		<button on:click={() => reset()}>
+			<i class="icofont-ui-delete" />
+		</button>
 	</div>
 
-	<h2>Info</h2>
-	<div class="alerts">
-		{#each stats.errors as error}
-			<div class="alert error">{error}</div>
-		{/each}
-	</div>
-	<div>Cost: {stats.totalPrice}</div>
-	<div>Extent: {stats.extent[0]}x{stats.extent[1]}</div>
-	<div>
-		Level: {stats.levelRequirements[0]?.level || 0}
-		{#if stats.levelRequirements.length > 0}
-			<button class="small" on:click={() => (showLevelDetails = !showLevelDetails)}>
-				<i class="icofont-info-circle" />
-			</button>
+	<div class="stats">
+		{#if stats.errors.length > 0}
+			<h2>Errors</h2>
+
+			<div class="row">
+				<div class="alerts">
+					{#each stats.errors as error}
+						<div class="alert error">{error}</div>
+					{/each}
+				</div>
+			</div>
 		{/if}
-	</div>
-	{#if showLevelDetails && stats.levelRequirements.length > 0}
-		<div>
+
+		<h2>Info</h2>
+
+		<div class="row">
+			<table>
+				<tbody>
+					<tr>
+						<td>Cost</td>
+						<td>{stats.totalPrice}</td>
+						<td />
+					</tr>
+					<tr>
+						<td>Extent</td>
+						<td>{stats.extent[0]}x{stats.extent[1]}</td>
+						<td />
+					</tr>
+					<tr>
+						<td>Min Level</td>
+						<td>{stats.levelRequirements[0]?.level}</td>
+						<td />
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2>Requirements</h2>
+
+		<div class="row">
 			<table>
 				<thead>
 					<tr>
@@ -199,31 +212,33 @@
 				</tbody>
 			</table>
 		</div>
-	{/if}
 
-	<h2>Rooms</h2>
-	<table>
-		<thead>
-			<tr>
-				<th>Type</th>
-				<th>Level</th>
-				<th>Cost</th>
-				<th>Amount</th>
-				<th>Total</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each stats.groupedRooms as { type, rooms }}
-				<tr>
-					<td>{type.name}</td>
-					<td class="number">{type.minLvl}</td>
-					<td class="number">{type.cost}</td>
-					<td class="number">{rooms.length || '-'}</td>
-					<td class="number">{rooms.length > 0 ? rooms.length * type.cost : '-'}</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+		<h2>Rooms</h2>
+		<div class="row">
+			<table>
+				<thead>
+					<tr>
+						<th>Type</th>
+						<th>Level</th>
+						<th>Cost</th>
+						<th>Amount</th>
+						<th>Total</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each stats.groupedRooms as { type, rooms }}
+						<tr>
+							<td>{type.name}</td>
+							<td class="number">{type.minLvl}</td>
+							<td class="number">{type.cost}</td>
+							<td class="number">{rooms.length || '-'}</td>
+							<td class="number">{rooms.length > 0 ? rooms.length * type.cost : '-'}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</div>
 </div>
 
 <style lang="scss">
@@ -231,29 +246,33 @@
 	$door-thickness: 6px;
 	$door-size: 30%; // percentage of the cell size (width/height)
 
-	.container {
-		flex: 2;
-		display: flex;
-		padding: 8px;
-		flex-direction: column;
-		align-items: flex-end;
-	}
-
 	.map {
-		width: calc(min(99vh, 100%) - 8px);
-		padding-bottom: calc(min(99vh, 100%) - 8px);
+		flex-shrink: 0;
 		position: relative;
+		width: min(100%, 100vh);
+		padding-bottom: min(100%, 100vh);
 	}
 
 	.grid {
-		width: 100%;
-		height: 100%;
-		align-self: center;
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
 		border: 1px solid white;
 		position: absolute;
+		top: 8px;
+		left: 8px;
+		right: 8px;
+		bottom: 8px;
+	}
+
+	.floor-controls {
+		display: flex;
+		flex-direction: row;
+		margin-bottom: 16px;
+
+		> *:not(:last-child) {
+			margin-right: 8px;
+		}
 	}
 
 	.popup {
@@ -407,22 +426,25 @@
 		}
 	}
 
-	.stats {
-		flex: 1;
+	.sidebar {
+		flex-grow: 1;
 		padding: 8px;
+	}
 
-		h2:first-child {
-			margin-top: 0;
-		}
+	.stats {
+		display: flex;
+		flex-direction: column;
 
 		table {
 			border-collapse: collapse;
 			border-spacing: 0;
+			color: white;
 		}
 
 		th,
 		td {
-			padding: 2px 16px;
+			padding: 4px 16px;
+			white-space: nowrap;
 		}
 
 		th {
@@ -436,9 +458,11 @@
 			}
 		}
 
-		td {
+		tr:not(:last-child) > td {
 			border-bottom: 1px dashed gray;
+		}
 
+		td {
 			&:first-child {
 				padding-left: 4px;
 			}

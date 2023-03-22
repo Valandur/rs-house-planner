@@ -1,4 +1,6 @@
-<slot />
+<div class="container">
+	<slot />
+</div>
 
 <style lang="scss">
 	:global(html),
@@ -7,12 +9,23 @@
 		padding: 0;
 		background-color: black;
 		color: white;
-		width: 100vw;
-		height: 100vh;
-		display: flex;
-		flex-direction: row;
-		align-items: stretch;
 		font-size: 16px;
+	}
+
+	:global(h1),
+	:global(h2),
+	:global(h3),
+	:global(h4) {
+		margin: 0;
+		margin-bottom: 8px;
+		margin-left: 8px;
+		padding: 0;
+	}
+
+	:global(h2:not(:first-child)),
+	:global(h3:not(:first-child)),
+	:global(h4:not(:first-child)) {
+		margin-top: 32px;
 	}
 
 	:global(button) {
@@ -36,5 +49,24 @@
 		margin: 0;
 		padding: 4px 8px;
 		font-size: 1rem;
+	}
+
+	.container {
+		display: flex;
+		flex-wrap: wrap;
+		overflow: auto;
+	}
+
+	@media (orientation: portrait) {
+		.container {
+			flex-direction: column;
+		}
+	}
+
+	@media (orientation: landscape) {
+		.container {
+			flex-direction: row;
+			align-items: flex-start;
+		}
 	}
 </style>
