@@ -17,15 +17,7 @@
 	:global(h3),
 	:global(h4) {
 		margin: 0;
-		margin-bottom: 8px;
-		margin-left: 8px;
 		padding: 0;
-	}
-
-	:global(h2:not(:first-child)),
-	:global(h3:not(:first-child)),
-	:global(h4:not(:first-child)) {
-		margin-top: 32px;
 	}
 
 	:global(button) {
@@ -40,6 +32,11 @@
 	:global(button.small) {
 		padding: 2px 4px;
 		font-size: 0.8rem;
+	}
+
+	:global(button:disabled) {
+		color: gray;
+		border-color: gray;
 	}
 
 	:global(select) {

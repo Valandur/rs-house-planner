@@ -65,12 +65,12 @@
 					<div
 						class="cell {room?.orientation || ''}"
 						class:selected
-						on:click={() => setSelected(x, y)}
-						on:keypress={() => setSelected(x, y)}
+						on:click|stopPropagation={() => setSelected(x, y)}
+						on:keypress|stopPropagation={() => setSelected(x, y)}
 					>
 						{#if room !== null}
-							<div class="marker" />
-							<div class="content" style:background-color={room.bg}>
+							<div class="marker" style:background-color={room.color} />
+							<div class="content" style:color={room.color} style:background-color={room.bg}>
 								<div class="title">{room.name}</div>
 							</div>
 							{#each room.doors as { name, connected }}
@@ -129,11 +129,7 @@
 	</div>
 </div>
 
-<div
-	class="sidebar"
-	on:click={() => setSelected(null, null)}
-	on:keypress={() => setSelected(null, null)}
->
+<div class="stats">
 	<div class="floor-controls">
 		<button disabled={floor >= MAX_FLOOR} on:click|stopPropagation={() => floorIndex++}>
 			<i class="icofont-arrow-up" />
@@ -151,94 +147,94 @@
 		</button>
 	</div>
 
-	<div class="stats">
-		{#if stats.errors.length > 0}
+	<div>
+		<h2>Help</h2>
+		<ul>
+			<li>Click a cell to the left to place a new room</li>
+		</ul>
+	</div>
+
+	{#if stats.errors.length > 0}
+		<div>
 			<h2>Errors</h2>
 
-			<div class="row">
-				<div class="alerts">
-					{#each stats.errors as error}
-						<div class="alert error">{error}</div>
-					{/each}
-				</div>
+			<div class="alerts">
+				{#each stats.errors as error}
+					<div class="alert error">{error}</div>
+				{/each}
 			</div>
-		{/if}
+		</div>
+	{/if}
 
+	<div>
 		<h2>Info</h2>
-
-		<div class="row">
-			<table>
-				<tbody>
-					<tr>
-						<td>Cost</td>
-						<td>{stats.totalPrice}</td>
-						<td />
-					</tr>
-					<tr>
-						<td>Extent</td>
-						<td>{stats.extent[0]}x{stats.extent[1]}</td>
-						<td />
-					</tr>
-					<tr>
-						<td>Min Level</td>
-						<td>{stats.levelRequirements[0]?.level}</td>
-						<td />
-					</tr>
-				</tbody>
-			</table>
-		</div>
-
-		<h2>Requirements</h2>
-
-		<div class="row">
-			<table>
-				<thead>
-					<tr>
-						<th>Requirement</th>
-						<th>Current</th>
-						<th>Limit</th>
-						<th>Min. Level</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each stats.levelRequirements as req}
-						<tr class:max={req.level === stats.levelRequirements[0].level}>
-							<td>{req.name}</td>
-							<td>{req.value}</td>
-							<td>{req.limit}</td>
-							<td>{req.level}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-
-		<h2>Rooms</h2>
-		<div class="row">
-			<table>
-				<thead>
-					<tr>
-						<th>Type</th>
-						<th>Level</th>
-						<th>Cost</th>
-						<th>Amount</th>
-						<th>Total</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each stats.groupedRooms as { type, rooms }}
-						<tr>
-							<td>{type.name}</td>
-							<td class="number">{type.minLvl}</td>
-							<td class="number">{type.cost}</td>
-							<td class="number">{rooms.length || '-'}</td>
-							<td class="number">{rooms.length > 0 ? rooms.length * type.cost : '-'}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+		<table>
+			<tbody>
+				<tr>
+					<td>Cost</td>
+					<td>{stats.totalPrice}</td>
+				</tr>
+				<tr>
+					<td>Extent</td>
+					<td>{stats.extent[0]}x{stats.extent[1]}</td>
+				</tr>
+				<tr>
+					<td>Min Level</td>
+					<td>{stats.levelRequirements[0]?.level || 0}</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
+
+	<div>
+		<h2>Requirements</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>Requirement</th>
+					<th>Current</th>
+					<th>Limit</th>
+					<th>Min. Level</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each stats.levelRequirements as req}
+					<tr class:max={req.level === stats.levelRequirements[0].level}>
+						<td>{req.name}</td>
+						<td>{req.value}</td>
+						<td>{req.limit}</td>
+						<td>{req.level}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+<div class="stats">
+	<h2>Rooms</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Type</th>
+				<th>Level</th>
+				<th>Cost</th>
+				<th>Amount</th>
+				<th>Total</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each stats.groupedRooms as { type, rooms }}
+				<tr>
+					<td>{type.name}</td>
+					<td class="number">{type.minLvl}</td>
+					<td class="number">{type.cost}</td>
+					<td class="number">{rooms.length || '-'}</td>
+					<td class="number">{rooms.length > 0 ? rooms.length * type.cost : '-'}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
 </div>
 
 <style lang="scss">
@@ -253,16 +249,16 @@
 		padding-bottom: min(100%, 100vh);
 	}
 
-	.grid {
-		display: flex;
-		flex-direction: column;
-		box-sizing: border-box;
-		border: 1px solid white;
-		position: absolute;
-		top: 8px;
-		left: 8px;
-		right: 8px;
-		bottom: 8px;
+	.stats {
+		padding: 8px;
+
+		h2 {
+			margin-bottom: 8px;
+		}
+
+		> div {
+			margin-bottom: 16px;
+		}
 	}
 
 	.floor-controls {
@@ -278,7 +274,7 @@
 	.popup {
 		position: absolute;
 		z-index: 100;
-		background-color: blue;
+		background-color: #ff1493;
 		box-sizing: border-box;
 		padding: 8px;
 		display: flex;
@@ -294,6 +290,18 @@
 		> *:not(:last-child) {
 			margin-right: 8px;
 		}
+	}
+
+	.grid {
+		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
+		border: 1px solid white;
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		right: 8px;
+		bottom: 8px;
 	}
 
 	.row {
@@ -313,7 +321,7 @@
 		background-color: white;
 
 		&.selected {
-			background-color: blue;
+			background-color: #ff1493;
 
 			.content {
 				top: 2px;
@@ -360,7 +368,7 @@
 		position: absolute;
 		z-index: 10;
 		box-sizing: border-box;
-		background-color: black;
+		background-color: rgba(0, 0, 0, 0.5);
 
 		&.connected {
 			background-color: rgb(222, 184, 135);
@@ -426,68 +434,58 @@
 		}
 	}
 
-	.sidebar {
-		flex-grow: 1;
-		padding: 8px;
+	table {
+		border-collapse: collapse;
+		border-spacing: 0;
+		color: white;
 	}
 
-	.stats {
-		display: flex;
-		flex-direction: column;
+	th,
+	td {
+		padding: 4px 16px;
+		white-space: nowrap;
+	}
 
-		table {
-			border-collapse: collapse;
-			border-spacing: 0;
-			color: white;
+	th {
+		border-bottom: 1px solid white;
+
+		&:first-child {
+			padding-left: 4px;
+		}
+		&:last-child {
+			padding-right: 4px;
+		}
+	}
+
+	tr:not(:last-child) > td {
+		border-bottom: 1px dashed gray;
+	}
+
+	td {
+		&:first-child {
+			padding-left: 4px;
+		}
+		&:last-child {
+			padding-right: 4px;
 		}
 
-		th,
-		td {
-			padding: 4px 16px;
-			white-space: nowrap;
+		&.number {
+			text-align: right;
 		}
+	}
 
-		th {
-			border-bottom: 1px solid white;
-
-			&:first-child {
-				padding-left: 4px;
-			}
-			&:last-child {
-				padding-right: 4px;
-			}
-		}
-
-		tr:not(:last-child) > td {
-			border-bottom: 1px dashed gray;
-		}
-
-		td {
-			&:first-child {
-				padding-left: 4px;
-			}
-			&:last-child {
-				padding-right: 4px;
-			}
-
-			&.number {
-				text-align: right;
-			}
-		}
-
-		.max td {
-			background-color: #de7309;
-		}
+	.max td {
+		background-color: #de7309;
 	}
 
 	.alerts {
-		margin-bottom: 12px;
+		margin-bottom: 16px;
 
 		.alert {
 			box-sizing: border-box;
 			border: 1px solid white;
 			background-color: gray;
-			margin: 0;
+			margin-bottom: 8px;
 			padding: 8px;
 
 			&.error {

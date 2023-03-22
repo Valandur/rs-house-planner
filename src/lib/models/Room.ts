@@ -1,24 +1,15 @@
 import type { Direction } from './Direction';
 import type { ExtendedDoor } from './Door';
+import type { RoomType } from './RoomType';
 
 export interface Room {
 	type: string;
 	orientation: Direction;
 }
 
-export interface ExtendedRoom {
-	// From type
-	type: string;
-	name: string;
-	cost: number;
-	minLvl: number;
-	doors: ExtendedDoor[];
-	stairs: boolean;
-	open: boolean;
-	bg: string;
-
-	// From room
+export interface ExtendedRoom extends Omit<RoomType, 'doors'>, Omit<Room, 'orientation'> {
 	x: number;
 	y: number;
+	doors: ExtendedDoor[];
 	orientation: string;
 }
