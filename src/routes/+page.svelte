@@ -23,11 +23,11 @@
 		plots = parseUrl($page.url.searchParams);
 	});
 
-	$: setRoom = (x: number, y: number, type: string | null) => {
-		if (type === null) {
+	$: setRoom = (x: number, y: number, typeKey: string | null) => {
+		if (typeKey === null) {
 			plots[floorIndex][y][x] = null;
 		} else {
-			plots[floorIndex][y][x] = { type, orientation: Direction.North };
+			plots[floorIndex][y][x] = { typeKey, orientation: Direction.North, furnitureKeys: {} };
 		}
 
 		goto(`?${getUrl(plots)}`, { replaceState: true });
@@ -54,35 +54,56 @@
 		selX = x;
 		selY = y;
 	};
+
+	$: setFurniture = (x: number, y: number, hotspot: string, type: string | null) => {
+		const plot = plots[floorIndex][y][x];
+		if (!plot) {
+			return;
+		}
+
+		plot.furnitureKeys[hotspot] = type;
+
+		goto(`?${getUrl(plots)}`, { replaceState: true });
+	};
 </script>
 
 <div class="map">
 	<div class="grid">
 		{#each extendedPlot as row, y}
 			<div class="row">
-				{#each row as room, x}
+				{#each row as extendedRoom, x}
 					{@const selected = x === selX && y === selY}
 					<div
-						class="cell {room?.orientation || ''}"
-						class:selected
+						class="cell {extendedRoom?.orientation || ''}"
 						on:click|stopPropagation={() => setSelected(x, y)}
 						on:keypress|stopPropagation={() => setSelected(x, y)}
 					>
-						{#if room !== null}
-							<div class="marker" style:background-color={room.color} />
-							<div class="content" style:color={room.color} style:background-color={room.bg}>
-								<div class="title">{room.name}</div>
+						{#if extendedRoom !== null}
+							<div class="marker" style:background-color={extendedRoom.type.color} />
+							<div
+								class="content"
+								style:color={extendedRoom.type.color}
+								style:background-color={extendedRoom.type.bg}
+							>
+								<div class="title">{extendedRoom.type.name}</div>
 							</div>
-							{#each room.doors as { name, connected }}
+							{#each extendedRoom.doors as { name, connected }}
 								<div class="door {name}" class:connected />
 							{/each}
 						{:else}
 							{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
-							<div class="content" class:below={!!below} class:supported={below && !below.open}>
+							<div
+								class="content"
+								class:below={!!below}
+								class:supported={below && !below.type.open}
+							>
 								{#if below}
-									<div class="title">{below.name}</div>
+									<div class="title">{below.type.name}</div>
 								{/if}
 							</div>
+						{/if}
+						{#if selected}
+							<div class="selected" />
 						{/if}
 					</div>
 				{/each}
@@ -90,39 +111,52 @@
 		{/each}
 
 		{#if selX !== null && selY !== null}
-			{@const y = selY}
+			{@const [x, y] = [selX, selY]}
 			{@const yRatio = 100 / extendedPlot.length}
-			{@const x = selX}
 			{@const xRatio = 100 / extendedPlot[y].length}
 			{@const below = extendedPlots[floorIndex - 1]?.[y][x]}
+			{@const above = extendedPlots[floorIndex + 1]?.[y][x]}
 			<div
 				class="popup"
-				style:top={y < SIZE_Y - 2 ? `${yRatio * (y + 1)}%` : ''}
-				style:bottom={y >= SIZE_Y - 2 ? `${yRatio * (SIZE_Y - y)}%` : ''}
-				style:left={x < SIZE_X - 2 ? `${xRatio * x}%` : ''}
-				style:right={x >= SIZE_X - 2 ? `${xRatio * (SIZE_X - x - 1)}%` : ''}
+				style:top={y < SIZE_Y / 2 ? `${yRatio * (y + 1)}%` : ''}
+				style:bottom={y >= SIZE_Y / 2 ? `${yRatio * (SIZE_Y - y)}%` : ''}
+				style:left={x < SIZE_X / 2 ? `${xRatio * x}%` : ''}
+				style:right={x >= SIZE_X / 2 ? `${xRatio * (SIZE_X - x - 1)}%` : ''}
 			>
-				{#if floor > 0 && (!below || below.open)}
+				{#if floor > 0 && (!below || below.type.open)}
 					<p>There is no supporting room below!</p>
 				{:else}
-					<select
-						value={extendedPlot[y][x]?.type || ''}
-						on:change={(e) => setRoom(x, y, e.currentTarget.value)}
-					>
-						<option value="" disabled selected>Pick a room...</option>
-						{#each ROOM_TYPES_LIST as [key, type]}
-							<option value={key}>{type.name}</option>
-						{/each}
-					</select>
-				{/if}
+					<div>
+						<select
+							value={extendedPlot[y][x]?.typeKey || ''}
+							on:change={(e) => setRoom(x, y, e.currentTarget.value)}
+						>
+							<option value="" disabled selected>Pick a room...</option>
+							{#each ROOM_TYPES_LIST as [key, type]}
+								{@const disabled = type.floors && !type.floors.includes(floor)}
+								<option {disabled} value={key}>
+									{type.name}{disabled ? ` (floors: ${type.floors?.join(', ')})` : ''}
+								</option>
+							{/each}
+						</select>
 
-				{#if extendedPlot[y][x]}
-					<button class="rotate" on:click|stopPropagation={() => rotateRoom(x, y)}>
-						<i class="icofont-ui-rotation" />
-					</button>
-					<button class="remove" on:click|stopPropagation={() => setRoom(x, y, null)}>
-						<i class="icofont-ui-delete" />
-					</button>
+						{#if extendedPlot[y][x]}
+							<button class="rotate" on:click|stopPropagation={() => rotateRoom(x, y)}>
+								<i class="icofont-ui-rotation" />
+							</button>
+							<button
+								class="remove"
+								disabled={!!above}
+								on:click|stopPropagation={() => setRoom(x, y, null)}
+							>
+								<i class="icofont-ui-delete" />
+							</button>
+						{/if}
+					</div>
+
+					{#if above}
+						<p>This room is acting as a support for the one above it!</p>
+					{/if}
 				{/if}
 			</div>
 		{/if}
@@ -167,7 +201,7 @@
 	{/if}
 
 	<div>
-		<h2>Info</h2>
+		<h2>Totals</h2>
 		<table>
 			<tbody>
 				<tr>
@@ -186,6 +220,57 @@
 		</table>
 	</div>
 
+	{#if selX !== null && selY !== null}
+		{@const [x, y, extendedRoom] = [selX, selY, extendedPlot[selY][selX]]}
+		{#if extendedRoom}
+			<div>
+				<h2>Details</h2>
+				<table>
+					<tbody>
+						<tr>
+							<td>Name</td>
+							<td>{extendedRoom.type.name}</td>
+						</tr>
+						<tr>
+							<td>Cost</td>
+							<td>{extendedRoom.type.cost}</td>
+						</tr>
+						<tr>
+							<td>Min. Level</td>
+							<td>{extendedRoom.type.minLvl}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div>
+				<h3>Furniture</h3>
+				<table>
+					<tbody>
+						{#each extendedRoom.furnitureHotspots as hotspot}
+							<tr>
+								<td>{hotspot.name}</td>
+								<td>
+									<select
+										value={extendedRoom.furnitureKeys[hotspot.key] || ''}
+										on:change={(e) => setFurniture(x, y, hotspot.key, e.currentTarget.value)}
+									>
+										<option value={''}>None</option>
+										{#each hotspot.options as extendedType}
+											<option value={extendedType.key}>{extendedType.name}</option>
+										{/each}
+									</select>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	{/if}
+</div>
+
+<div class="stats">
 	<div>
 		<h2>Requirements</h2>
 		<table>
@@ -209,32 +294,32 @@
 			</tbody>
 		</table>
 	</div>
-</div>
 
-<div class="stats">
-	<h2>Rooms</h2>
-	<table>
-		<thead>
-			<tr>
-				<th>Type</th>
-				<th>Level</th>
-				<th>Cost</th>
-				<th>Amount</th>
-				<th>Total</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each stats.groupedRooms as { type, rooms }}
+	<div>
+		<h2>Rooms</h2>
+		<table>
+			<thead>
 				<tr>
-					<td>{type.name}</td>
-					<td class="number">{type.minLvl}</td>
-					<td class="number">{type.cost}</td>
-					<td class="number">{rooms.length || '-'}</td>
-					<td class="number">{rooms.length > 0 ? rooms.length * type.cost : '-'}</td>
+					<th>Type</th>
+					<th>Level</th>
+					<th>Cost</th>
+					<th>Amount</th>
+					<th>Total</th>
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				{#each stats.groupedRooms as { type, rooms }}
+					<tr>
+						<td>{type.name}</td>
+						<td class="number">{type.minLvl}</td>
+						<td class="number">{type.cost}</td>
+						<td class="number">{rooms.length || '-'}</td>
+						<td class="number">{rooms.length > 0 ? rooms.length * type.cost : '-'}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 </div>
 
 <style lang="scss">
@@ -250,9 +335,11 @@
 	}
 
 	.stats {
+		flex: 1;
 		padding: 8px;
 
-		h2 {
+		h2,
+		h3 {
 			margin-bottom: 8px;
 		}
 
@@ -274,21 +361,30 @@
 	.popup {
 		position: absolute;
 		z-index: 100;
-		background-color: #ff1493;
-		box-sizing: border-box;
+		background-color: #ebe6e6;
 		padding: 8px;
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
+		color: black;
+
+		> div {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+
+			&:not(:last-child) {
+				margin-bottom: 8px;
+			}
+
+			> *:not(:last-child) {
+				margin-right: 8px;
+			}
+		}
 
 		p {
 			margin: 0;
 			padding: 0;
-			color: white;
 			white-space: nowrap;
-		}
-
-		> *:not(:last-child) {
-			margin-right: 8px;
 		}
 	}
 
@@ -296,7 +392,7 @@
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
-		border: 1px solid white;
+		border: 1px solid gray;
 		position: absolute;
 		top: 8px;
 		left: 8px;
@@ -311,28 +407,21 @@
 	}
 
 	.cell {
-		/* For some reason making the flex-basis the size of the border fixes 
-		 * the cells using different space for different border widths
-		 */
 		flex: 1;
-		width: 0;
+		width: 0; // This fixes the cell changing sizes when the border thickness changes
 		position: relative;
 		overflow: hidden;
-		background-color: white;
+		background-color: gray;
 
-		&.selected {
-			background-color: #ff1493;
-
-			.content {
-				top: 2px;
-				left: 2px;
-				right: 2px;
-				bottom: 2px;
-
-				.title {
-					margin: 7px;
-				}
-			}
+		> .selected {
+			position: absolute;
+			box-sizing: content-box;
+			border: 6px solid #ebe6e6;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 1000;
 		}
 
 		&.north .marker {
@@ -361,7 +450,7 @@
 		width: 4px;
 		height: 4px;
 		z-index: 10;
-		background-color: white;
+		background-color: #ebe6e6;
 	}
 
 	.door {
@@ -437,7 +526,7 @@
 	table {
 		border-collapse: collapse;
 		border-spacing: 0;
-		color: white;
+		color: #ebe6e6;
 	}
 
 	th,
@@ -447,7 +536,7 @@
 	}
 
 	th {
-		border-bottom: 1px solid white;
+		border-bottom: 1px solid #ebe6e6;
 
 		&:first-child {
 			padding-left: 4px;
@@ -483,7 +572,7 @@
 
 		.alert {
 			box-sizing: border-box;
-			border: 1px solid white;
+			border: 1px solid #ebe6e6;
 			background-color: gray;
 			margin-bottom: 8px;
 			padding: 8px;

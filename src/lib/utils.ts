@@ -1,32 +1,49 @@
-import { createEmptyPlot, SIZE_Y, type Plot } from './models/Plot';
+import { createEmptyPlot, SIZE_X, type Plot } from './models/Plot';
 import { FLOORS } from './models/Floor';
+import type { Room } from './models/Room';
+
+const roomToString = (room: Room | null, index: number): string | null => {
+	if (!room) {
+		return null;
+	}
+
+	const furnitureStr = Object.entries(room.furnitureKeys)
+		.filter(([, value]) => !!value)
+		.map(([key, value]) => `${key}:${value}`)
+		.join('-');
+	return `${index}-${room.typeKey}-${room.orientation}-${furnitureStr}`;
+};
 
 export const getUrl = (plots: Plot[]): URLSearchParams => {
 	const query = new URLSearchParams();
 
 	for (let i = 0; i < FLOORS.length; i++) {
-		const rooms = plots[i].flat();
-
-		let last = -1;
-		const parts: string[] = [];
-		for (let i = 0; i < rooms.length; i++) {
-			const room = rooms[i];
-
-			if (!room) {
-				continue;
-			}
-
-			const prefix =
-				i - last - 1 < `${i}.`.length ? '-'.repeat(Math.max(0, i - last - 1)) : `${i}.`;
-			parts.push(`${prefix}${room.type}.${room.orientation}`);
-			last = i;
-		}
-
-		const url = parts.join('-');
-		query.set(`f${FLOORS[i]}`, url);
+		const rooms = plots[i]
+			.flat()
+			.map(roomToString)
+			.filter((r) => !!r)
+			.join(',');
+		query.set(`f${FLOORS[i]}`, btoa(rooms));
 	}
 
 	return query;
+};
+
+const stringToRoom = (str: string): [number, Room] => {
+	const splits = str.split('-');
+	const furnitureKeys: { [key: string]: string } = {};
+	for (let i = 3; i < splits.length; i++) {
+		const parts = splits[i].split(':');
+		furnitureKeys[parts[0]] = parts[1];
+	}
+	return [
+		Number(splits[0]),
+		{
+			typeKey: splits[1],
+			orientation: Number(splits[2]),
+			furnitureKeys
+		}
+	];
 };
 
 export const parseUrl = (urlSearchParams: URLSearchParams): Plot[] => {
@@ -35,31 +52,12 @@ export const parseUrl = (urlSearchParams: URLSearchParams): Plot[] => {
 	for (let i = 0; i < FLOORS.length; i++) {
 		const plot = createEmptyPlot();
 
-		const url = urlSearchParams.get(`f${FLOORS[i]}`);
-		if (!url) {
-			plots.push(plot);
-			continue;
-		}
-
-		let lastI = 0;
-		let lastIdx = 0;
-		const parts = url.split('-');
-		for (let i = 0; i < parts.length; i++) {
-			const splits = parts[i].split('.');
-			if (splits.length < 2) {
-				continue;
-			}
-
-			if (splits.length === 3) {
-				const idx = Number(splits[0]);
-				const dir = Number(splits[2]);
-				plot[Math.floor(idx / SIZE_Y)][idx % SIZE_Y] = { type: splits[1], orientation: dir };
-				lastI = i;
-				lastIdx = idx;
-			} else {
-				const idx = lastIdx + (i - lastI);
-				const dir = Number(splits[1]);
-				plot[Math.floor(idx / SIZE_Y)][idx % SIZE_Y] = { type: splits[0], orientation: dir };
+		const data = urlSearchParams.get(`f${FLOORS[i]}`);
+		if (data) {
+			console.log(atob(data));
+			const rooms = atob(data).split(',').map(stringToRoom);
+			for (const [idx, room] of rooms) {
+				plot[Math.floor(idx / SIZE_X)][idx % SIZE_X] = room;
 			}
 		}
 

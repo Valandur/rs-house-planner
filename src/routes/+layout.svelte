@@ -8,7 +8,7 @@
 		margin: 0;
 		padding: 0;
 		background-color: black;
-		color: white;
+		color: #ebe6e6;
 		font-size: 16px;
 	}
 
@@ -21,8 +21,8 @@
 	}
 
 	:global(button) {
-		color: white;
-		border: 1px solid white;
+		color: #ebe6e6;
+		border: 1px solid #ebe6e6;
 		background-color: black;
 		margin: 0;
 		padding: 4px 8px;
@@ -40,9 +40,9 @@
 	}
 
 	:global(select) {
-		color: white;
+		color: #ebe6e6;
 		background-color: black;
-		border: 1px solid white;
+		border: 1px solid #ebe6e6;
 		margin: 0;
 		padding: 4px 8px;
 		font-size: 1rem;

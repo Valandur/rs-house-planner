@@ -1,11 +1,38 @@
 import { Direction, getDirName, rotateClockwise } from './Direction';
-import { ROOM_TYPES } from './RoomType';
-import type { ExtendedRoom, Room } from './Room';
+import { FURNITURE_TYPES, type FurnitureType } from './FurnitureType';
+import { ROOM_TYPES, type RoomType } from './RoomType';
+import type { FurnitureHotspot } from './FurnitureHotspot';
+import type { Room } from './Room';
 
 export const SIZE_X = 9;
 export const SIZE_Y = 9;
 
 export type Plot = (Room | null)[][];
+
+export interface ExtendedDoor {
+	key: Direction;
+	name: string;
+	connected: boolean;
+}
+
+export interface ExtendedFurnitureType extends FurnitureType {
+	key: string;
+}
+
+export interface ExtendedFurnitureHotspot extends FurnitureHotspot {
+	key: string;
+	options: ExtendedFurnitureType[];
+}
+
+export interface ExtendedRoom extends Room {
+	x: number;
+	y: number;
+	typeKey: string;
+	type: RoomType;
+	doors: ExtendedDoor[];
+	orientationName: string;
+	furnitureHotspots: ExtendedFurnitureHotspot[];
+}
 
 export type ExtendedPlot = (ExtendedRoom | null)[][];
 
@@ -25,20 +52,26 @@ export const getExtendedPlots = (plots: Plot[]): ExtendedPlot[] => {
 					continue;
 				}
 
-				const type = ROOM_TYPES[room.type];
+				const roomType = ROOM_TYPES[room.typeKey];
+
 				extendedPlot[y].push({
-					...type,
 					...room,
 					x,
 					y,
-					doors: type.doors
+					type: roomType,
+					doors: roomType.doors
 						.map((door) => rotateClockwise(door, room.orientation))
 						.map((door) => ({
-							dir: door,
+							key: door,
 							name: getDirName(door),
 							connected: false
 						})),
-					orientation: getDirName(room.orientation)
+					orientationName: getDirName(room.orientation),
+					furnitureHotspots: Object.entries(roomType.furnitureHotspots).map(([key, hotspot]) => ({
+						...hotspot,
+						key,
+						options: hotspot.optionKeys.map((key) => ({ ...FURNITURE_TYPES[key], key }))
+					}))
 				});
 			}
 		}
@@ -58,12 +91,12 @@ export const getExtendedPlots = (plots: Plot[]): ExtendedPlot[] => {
 				};
 
 				for (const door of room.doors) {
-					const neighbour = neighbours[door.dir];
+					const neighbour = neighbours[door.key];
 					if (!neighbour) {
 						continue;
 					}
 
-					door.connected = neighbour.doors.some((d) => d.dir === rotateClockwise(door.dir, 2));
+					door.connected = neighbour.doors.some((d) => d.key === rotateClockwise(door.key, 2));
 				}
 			}
 		}
