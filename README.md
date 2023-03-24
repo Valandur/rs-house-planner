@@ -6,7 +6,7 @@
 
 This is a simple PoH (Player owner Home) planner for RuneScape, (hopefully) more up-to-date and providing more insights than other planners out there.
 
-## Hot to use
+## How to use
 
 - Click a cell to select it
 - Use the dropdown to select a room type
