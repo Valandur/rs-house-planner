@@ -1,37 +1,7 @@
-import { ROOM_TYPES_LIST, type RoomType } from './RoomType';
-import { SIZE_X, SIZE_Y, type ExtendedPlot, type ExtendedRoom } from './Plot';
-
-export interface SizeLimit {
-	level: number;
-	rooms: number;
-	extent: [number, number];
-}
-
-export const SIZE_LIMITS: SizeLimit[] = [
-	{ level: 0, rooms: 0, extent: [0, 0] },
-	{ level: 1, rooms: 21, extent: [3, 3] },
-	{ level: 15, rooms: 21, extent: [4, 4] },
-	{ level: 30, rooms: 21, extent: [5, 5] },
-	{ level: 38, rooms: 22, extent: [5, 5] },
-	{ level: 44, rooms: 23, extent: [5, 5] },
-	{ level: 45, rooms: 23, extent: [6, 6] },
-	{ level: 50, rooms: 24, extent: [6, 6] },
-	{ level: 56, rooms: 25, extent: [6, 6] },
-	{ level: 60, rooms: 25, extent: [7, 7] },
-	{ level: 62, rooms: 26, extent: [7, 7] },
-	{ level: 68, rooms: 27, extent: [7, 7] },
-	{ level: 74, rooms: 28, extent: [7, 7] },
-	{ level: 80, rooms: 29, extent: [7, 7] },
-	{ level: 86, rooms: 30, extent: [7, 7] },
-	{ level: 92, rooms: 31, extent: [7, 7] },
-	{ level: 96, rooms: 32, extent: [7, 7] },
-	{ level: 99, rooms: 33, extent: [7, 7] }
-];
-
-export interface GroupedRooms {
-	type: RoomType;
-	rooms: ExtendedRoom[];
-}
+import { SIZE_X, SIZE_Y, type Plot } from './Plot';
+import type { Room } from './Room';
+import { ROOM_TYPES } from './RoomType';
+import { SIZE_LIMITS } from './SizeLimit';
 
 export interface LevelRequirement {
 	name: string;
@@ -41,54 +11,49 @@ export interface LevelRequirement {
 }
 
 export interface Stats {
-	groupedRooms: GroupedRooms[];
 	totalPrice: number;
 	levelRequirements: LevelRequirement[];
 	extent: [number, number];
 	errors: string[];
 }
 
-export const getStats = (plots: ExtendedPlot[]): Stats => {
-	const rooms = plots
-		.flat(2)
-		.filter((room) => !!room)
-		.map((room) => room as ExtendedRoom);
-	const groupedRooms = ROOM_TYPES_LIST.map(([key, type]) => ({
-		type,
-		rooms: rooms.filter((room) => room.typeKey === key)
-	})).sort((a, b) => b.rooms.length - a.rooms.length);
+export const calculateStats = (plots: Plot[]): Stats => {
+	const rooms = plots.flat(2).filter((room) => !!room) as Room[];
 
-	let cost = 0;
+	let totalPrice = 0;
 	let minX = SIZE_X;
 	let minY = SIZE_Y;
 	let maxX = 0;
 	let maxY = 0;
-	let roomLvlReq: ExtendedRoom | null = null;
+	let maxRoom: Room | null = null;
+
 	const errors: string[] = [];
+	const levelRequirements: LevelRequirement[] = [];
 
 	for (const room of rooms) {
-		cost += room.type.cost;
-		roomLvlReq = roomLvlReq && room.type.minLvl <= roomLvlReq.type.minLvl ? roomLvlReq : room;
+		const type = ROOM_TYPES[room.typeKey];
+		totalPrice += type.cost;
+		maxRoom = maxRoom && type.minLvl <= ROOM_TYPES[maxRoom.typeKey].minLvl ? maxRoom : room;
 		minX = Math.min(minX, room.x);
 		maxX = Math.max(maxX, room.x);
 		minY = Math.min(minY, room.y);
 		maxY = Math.max(maxY, room.y);
 	}
 
-	const reqs: LevelRequirement[] = [];
-	if (roomLvlReq) {
-		reqs.push({
+	if (maxRoom) {
+		const type = ROOM_TYPES[maxRoom.typeKey];
+		levelRequirements.push({
 			name: 'Highest Level Room',
-			value: roomLvlReq.type.name,
+			value: type.name,
 			limit: '-',
-			level: roomLvlReq.type.minLvl
+			level: type.minLvl
 		});
 	}
 
 	if (rooms.length > 0) {
 		const reqNumRooms = SIZE_LIMITS.find((limit) => limit.rooms >= rooms.length);
 		if (reqNumRooms) {
-			reqs.push({
+			levelRequirements.push({
 				name: 'Number of Rooms',
 				value: rooms.length,
 				limit: reqNumRooms.rooms,
@@ -104,7 +69,7 @@ export const getStats = (plots: ExtendedPlot[]): Stats => {
 	if (diffX > 0) {
 		const reqExtentX = SIZE_LIMITS.find((limit) => limit.extent[0] >= diffX);
 		if (reqExtentX) {
-			reqs.push({
+			levelRequirements.push({
 				name: 'Extent X',
 				value: diffX,
 				limit: reqExtentX.extent[0],
@@ -120,7 +85,7 @@ export const getStats = (plots: ExtendedPlot[]): Stats => {
 	if (diffY > 0) {
 		const reqExtentY = SIZE_LIMITS.find((limit) => limit.extent[1] >= diffY);
 		if (reqExtentY) {
-			reqs.push({
+			levelRequirements.push({
 				name: 'Extent Y',
 				value: diffY,
 				limit: reqExtentY.extent[1],
@@ -132,12 +97,11 @@ export const getStats = (plots: ExtendedPlot[]): Stats => {
 		}
 	}
 
-	reqs.sort((a, b) => b.level - a.level);
+	levelRequirements.sort((a, b) => b.level - a.level);
 
 	return {
-		groupedRooms,
-		totalPrice: cost,
-		levelRequirements: reqs,
+		totalPrice,
+		levelRequirements,
 		extent: [diffX, diffY],
 		errors
 	};

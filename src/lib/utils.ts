@@ -29,21 +29,24 @@ export const getUrl = (plots: Plot[]): URLSearchParams => {
 	return query;
 };
 
-const stringToRoom = (str: string): [number, Room] => {
+const stringToRoom = (str: string): Room => {
 	const splits = str.split('-');
 	const furnitureKeys: { [key: string]: string } = {};
 	for (let i = 3; i < splits.length; i++) {
 		const parts = splits[i].split(':');
 		furnitureKeys[parts[0]] = parts[1];
 	}
-	return [
-		Number(splits[0]),
-		{
-			typeKey: splits[1],
-			orientation: Number(splits[2]),
-			furnitureKeys
-		}
-	];
+
+	const idx = Number(splits[0]);
+	const x = idx % SIZE_X;
+	const y = Math.floor(idx / SIZE_X);
+	return {
+		x,
+		y,
+		typeKey: splits[1],
+		orientation: Number(splits[2]),
+		furnitureKeys
+	};
 };
 
 export const parseUrl = (urlSearchParams: URLSearchParams): Plot[] => {
@@ -54,10 +57,10 @@ export const parseUrl = (urlSearchParams: URLSearchParams): Plot[] => {
 
 		const data = urlSearchParams.get(`f${FLOORS[i]}`);
 		if (data) {
-			console.log(atob(data));
-			const rooms = atob(data).split(',').map(stringToRoom);
-			for (const [idx, room] of rooms) {
-				plot[Math.floor(idx / SIZE_X)][idx % SIZE_X] = room;
+			const splits = atob(data).split(',');
+			for (const split of splits) {
+				const room = stringToRoom(split);
+				plot[room.y][room.x] = room;
 			}
 		}
 
