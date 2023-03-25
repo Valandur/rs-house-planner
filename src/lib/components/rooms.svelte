@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { Room } from '$lib/models/Room';
-	import { ROOM_TYPES_LIST } from '$lib/models/RoomType';
+	import { ROOM_TYPES } from '$lib/models/RoomType';
 
 	export let rooms: (Room | null)[];
 
-	$: groupedRooms = ROOM_TYPES_LIST.map(([key, type]) => ({
+	$: groupedRooms = ROOM_TYPES.map((type) => ({
 		type,
-		rooms: rooms.filter((room) => room?.typeKey === key)
+		rooms: rooms.filter((room) => room?.type.key === type.key)
 	})).sort((a, b) => b.rooms.length - a.rooms.length);
 </script>
 

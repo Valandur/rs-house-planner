@@ -33,7 +33,6 @@
 
 	.active {
 		background-color: #ebe6e6;
-		border: 1px solid black;
 		color: black;
 	}
 
@@ -56,7 +55,6 @@
 
 		.active {
 			background-color: black;
-			border: 1px solid #ebe6e6;
 			color: #ebe6e6;
 		}
 

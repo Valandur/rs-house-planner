@@ -1,7 +1,7 @@
-import { SIZE_X, SIZE_Y, type Plot } from './Plot';
-import type { Room } from './Room';
-import { ROOM_TYPES } from './RoomType';
 import { SIZE_LIMITS } from './SizeLimit';
+import { SIZE_X, SIZE_Y } from './Floor';
+import type { House } from './House';
+import type { Room } from './Room';
 
 export interface LevelRequirement {
 	name: string;
@@ -17,8 +17,11 @@ export interface Stats {
 	errors: string[];
 }
 
-export const calculateStats = (plots: Plot[]): Stats => {
-	const rooms = plots.flat(2).filter((room) => !!room) as Room[];
+export const calculateStats = (house: House): Stats => {
+	const rooms = house.floors
+		.map((floor) => floor.rooms)
+		.flat(2)
+		.filter((room) => !!room) as Room[];
 
 	let totalPrice = 0;
 	let minX = SIZE_X;
@@ -31,9 +34,8 @@ export const calculateStats = (plots: Plot[]): Stats => {
 	const levelRequirements: LevelRequirement[] = [];
 
 	for (const room of rooms) {
-		const type = ROOM_TYPES[room.typeKey];
-		totalPrice += type.cost;
-		maxRoom = maxRoom && type.minLvl <= ROOM_TYPES[maxRoom.typeKey].minLvl ? maxRoom : room;
+		totalPrice += room.type.cost;
+		maxRoom = maxRoom && room.type.minLvl <= maxRoom.type.minLvl ? maxRoom : room;
 		minX = Math.min(minX, room.x);
 		maxX = Math.max(maxX, room.x);
 		minY = Math.min(minY, room.y);
@@ -41,12 +43,11 @@ export const calculateStats = (plots: Plot[]): Stats => {
 	}
 
 	if (maxRoom) {
-		const type = ROOM_TYPES[maxRoom.typeKey];
 		levelRequirements.push({
 			name: 'Highest Level Room',
-			value: type.name,
+			value: maxRoom.type.name,
 			limit: '-',
-			level: type.minLvl
+			level: maxRoom.type.minLvl
 		});
 	}
 

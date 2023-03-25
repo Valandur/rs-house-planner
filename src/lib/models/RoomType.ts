@@ -1,7 +1,9 @@
 import { Door } from './Door';
-import type { FurnitureHotspots } from './FurnitureHotspot';
+import type { Hotspot } from './Hotspot';
 
 export interface RoomType {
+	/** The key used to identify this room type */
+	key: string;
 	/** The name of the room type */
 	name: string;
 	/** The cost in gold to build a room of this type */
@@ -13,7 +15,7 @@ export interface RoomType {
 	/** The color used for the background of rooms of this type */
 	bg: string;
 	/** The furniture hotspots that are available for building in this type of room */
-	furnitureHotspots: FurnitureHotspots;
+	hotspots: Hotspot[];
 	/** The foreground color used for the name of the room, defaults to 'white' */
 	color?: string;
 	/** True if there are stairs present in the room, false (default) otherwise */
@@ -24,247 +26,283 @@ export interface RoomType {
 	floors?: number[];
 }
 
-export const ROOM_TYPES: { [key: string]: RoomType } = {
-	garden: {
+export const ROOM_TYPES: RoomType[] = [
+	{
+		key: 'garden',
 		name: 'Garden',
 		cost: 1000,
 		minLvl: 1,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#034a03',
-		furnitureHotspots: {
-			centrepiece: {
+		hotspots: [
+			{
 				name: 'Centrepiece',
-				optionKeys: ['exit_portal', 'decorative_rock', 'pond', 'imp_statue', 'dungeon_entrance']
+				options: ['exit_portal', 'decorative_rock', 'pond', 'imp_statue', 'dungeon_entrance']
 			},
-			tree: {
+			{
 				name: 'Tree',
-				optionKeys: []
+				options: []
 			},
-			big_tree: {
+			{
 				name: 'Big Tree',
-				optionKeys: []
+				options: []
 			},
-			small_plant_1: {
+			{
 				name: 'Small Plant 1',
-				optionKeys: ['plant', 'small_fern', 'fern']
+				options: ['plant', 'small_fern', 'fern']
 			},
-			small_plant_2: {
+			{
 				name: 'Small Plant 2',
-				optionKeys: ['dock_leaf', 'thistle', 'reeds']
+				options: ['dock_leaf', 'thistle', 'reeds']
 			},
-			big_plant_1: {
+			{
 				name: 'Big Plant 1',
-				optionKeys: []
+				options: []
 			},
-			big_plant_2: {
+			{
 				name: 'Big Plant 2',
-				optionKeys: []
+				options: []
 			}
-		},
+		],
 		open: true,
 		floors: [0]
 	},
-	parlour: {
+	{
+		key: 'parlour',
 		name: 'Parlour',
 		cost: 1000,
 		minLvl: 1,
 		doors: [Door.East, Door.South, Door.West],
 		bg: '#424242',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	kitchen: {
+	{
+		key: 'kitchen',
 		name: 'Kitchen',
 		cost: 5000,
 		minLvl: 5,
 		doors: [Door.East, Door.South],
 		bg: '#542808',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	dining_room: {
+	{
+		key: 'dining_room',
 		name: 'Dining Room',
 		cost: 5000,
 		minLvl: 10,
 		doors: [Door.East, Door.South, Door.West],
 		bg: '#424242',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	workshop: {
+	{
+		key: 'workshop',
 		name: 'Workshop',
 		cost: 10000,
 		minLvl: 15,
 		doors: [Door.North, Door.South],
 		bg: '#542808',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	bedroom: {
+	{
+		key: 'bedroom',
 		name: 'Bedroom',
 		cost: 10000,
 		minLvl: 20,
 		doors: [Door.East, Door.South],
 		bg: '#424242',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	skill_hall: {
+	{
+		key: 'skill_hall',
 		name: 'Skill Hall',
 		cost: 15000,
 		minLvl: 25,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#3f0569',
-		furnitureHotspots: {},
+		hotspots: [],
 		stairs: true
 	},
-	games_room: {
+	{
+		key: 'games_room',
 		name: 'Games Room',
 		cost: 25000,
 		minLvl: 30,
 		doors: [Door.East, Door.South, Door.West],
 		bg: '#731e4c',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	combat_room: {
+	{
+		key: 'combat_room',
 		name: 'Combat Room',
 		cost: 25000,
 		minLvl: 30,
 		doors: [Door.East, Door.South, Door.West],
 		bg: '#731e4c',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	quest_hall: {
+	{
+		key: 'quest_hall',
 		name: 'Quest Hall',
 		cost: 25000,
 		minLvl: 32,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#3f0569',
-		furnitureHotspots: {},
+		hotspots: [],
 		stairs: true
 	},
-	menagerie: {
+	{
+		key: 'menagerie',
 		name: 'Menagerie',
 		cost: 30000,
 		minLvl: 37,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#034a03',
-		furnitureHotspots: {},
+		hotspots: [],
 		open: true,
 		floors: [0]
 	},
-	study: {
+	{
+		key: 'study',
 		name: 'Study',
 		cost: 50000,
 		minLvl: 40,
 		doors: [Door.East, Door.South, Door.West],
 		bg: '#542808',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	costume_room: {
+	{
+		key: 'costume_room',
 		name: 'Costume Room',
 		cost: 50000,
 		minLvl: 42,
 		doors: [Door.South],
 		bg: '#731e4c',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	chapel: {
+	{
+		key: 'chapel',
 		name: 'Chapel',
 		cost: 50000,
 		minLvl: 45,
 		doors: [Door.East, Door.South],
 		bg: '#542808',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	portal_chamber: {
+	{
+		key: 'portal_chamber',
 		name: 'Portal Chamber',
 		cost: 100000,
 		minLvl: 50,
 		doors: [Door.South],
 		bg: '#542808',
-		furnitureHotspots: {}
+		hotspots: []
 	},
-	formal_garden: {
+	{
+		key: 'formal_garden',
 		name: 'Formal Garden',
 		cost: 75000,
 		minLvl: 55,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#034a03',
-		furnitureHotspots: {},
+		hotspots: [],
 		open: true,
 		floors: [0]
 	},
-	throne_room: {
+	{
+		key: 'throne_room',
 		name: 'Throne Room',
 		cost: 150000,
 		minLvl: 60,
 		doors: [Door.South],
 		bg: '#040459',
-		furnitureHotspots: {},
+		hotspots: [],
 		floors: [0]
 	},
-	aquarium: {
+	{
+		key: 'aquarium',
 		name: 'Aquarium',
 		cost: 200000,
 		minLvl: 63,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#542808',
-		furnitureHotspots: {},
+		hotspots: [],
 		floors: [0]
 	},
-	oubliette: {
+	{
+		key: 'oubliette',
 		name: 'Oubliette',
 		cost: 150000,
 		minLvl: 65,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#800303',
-		furnitureHotspots: {},
+		hotspots: [],
 		floors: [-1]
 	},
-	dungeon_corridor: {
+	{
+		key: 'dungeon_corridor',
 		name: 'Dungeon Corridor',
 		cost: 7500,
 		minLvl: 70,
 		doors: [Door.North, Door.South],
 		bg: '#800303',
-		furnitureHotspots: {},
+		hotspots: [],
 		floors: [-1]
 	},
-	dungeon_junction: {
+	{
+		key: 'dungeon_junction',
 		name: 'Dungeon Junction',
 		cost: 7500,
 		minLvl: 70,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#800303',
-		furnitureHotspots: {},
+		hotspots: [],
 		floors: [-1]
 	},
-	dungeon_stairs: {
+	{
+		key: 'dungeon_stairs',
 		name: 'Dungeon Stairs',
 		cost: 7500,
 		minLvl: 70,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#800303',
-		furnitureHotspots: {},
+		hotspots: [],
 		stairs: true,
 		floors: [-1]
 	},
-	dungeon_pit: {
+	{
+		key: 'dungeon_pit',
 		name: 'Dungeon Pit',
 		cost: 10000,
 		minLvl: 70,
 		doors: [Door.North, Door.East, Door.South, Door.West],
 		bg: '#800303',
-		furnitureHotspots: {},
+		hotspots: [],
 		floors: [-1]
 	},
-	treasure_room: {
+	{
+		key: 'treasure_room',
 		name: 'Treasure Room',
 		cost: 250000,
 		minLvl: 75,
 		doors: [Door.South],
 		bg: '#800303',
-		furnitureHotspots: {},
+		hotspots: [],
 		floors: [-1]
 	}
-};
+];
 
-export const ROOM_TYPES_LIST = Object.entries(ROOM_TYPES).sort(([, a], [, b]) =>
-	a.name.localeCompare(b.name)
-);
+const map: Map<string, RoomType> = new Map();
+for (const type of ROOM_TYPES) {
+	if (map.has(type.key)) {
+		throw new Error(`Duplicate room type ${type.key}`);
+	}
+	map.set(type.key, type);
+}
+
+export const getRoomTypeByKey = (key: string): RoomType => {
+	const type = map.get(key);
+	if (!type) {
+		throw new Error(`Unknown room type ${key}`);
+	}
+	return type;
+};

@@ -1,46 +1,38 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 
-	import { Direction, getDirName, rotateClockwise } from '$lib/models/Direction';
-	import { ROOM_TYPES } from '$lib/models/RoomType';
-	import type { Room } from '$lib/models/Room';
+	import { Direction, getDirName } from '$lib/models/Direction';
+	import { getRotatedDoors, type Room } from '$lib/models/Room';
 
-	export let x: number;
-	export let y: number;
 	export let room: Room | null;
 	export let below: Room | null;
 	export let connections: Direction[];
 	export let selected: boolean;
 
-	const dispatch = createEventDispatcher<{ selected: { x: number; y: number } }>();
+	const dispatch = createEventDispatcher<{ selected: {} }>();
+	const onSelected = () => dispatch('selected');
 
-	$: setSelected = () => {
-		dispatch('selected', { x, y });
-	};
-
-	$: type = room ? ROOM_TYPES[room.typeKey] : null;
-	$: doors = type?.doors.map((door) => rotateClockwise(door, room?.orientation || 0)) || [];
+	$: doors = getRotatedDoors(room);
 	$: dir = room ? getDirName(room.orientation) : '';
-	$: belowType = below ? ROOM_TYPES[below.typeKey] : null;
 </script>
 
 <div
 	class="cell {dir}"
-	on:click|stopPropagation={setSelected}
-	on:keypress|stopPropagation={setSelected}
+	on:click|stopPropagation={onSelected}
+	on:keypress|stopPropagation={onSelected}
 >
-	{#if room && type}
-		<div class="marker" style:background-color={type.color} />
-		<div class="content" style:color={type.color} style:background-color={type.bg}>
-			<div class="title">{type.name}</div>
+	{#if room}
+		<div class="marker" style:background-color={room.type.color} />
+		<div class="content" style:color={room.type.color} style:background-color={room.type.bg}>
+			<div class="title">{room.type.name}</div>
 		</div>
 		{#each doors as door}
 			<div class="door {getDirName(door)}" class:connected={connections.includes(door)} />
 		{/each}
 	{:else}
-		<div class="content" class:below={!!below} class:supported={belowType && !belowType.open}>
-			{#if below && belowType}
-				<div class="title">{belowType.name}</div>
+		<div class="content" class:below={!!below} class:supported={below && !below.type.open}>
+			{#if below}
+				<div class="title">{below.type.name}</div>
 			{/if}
 		</div>
 	{/if}

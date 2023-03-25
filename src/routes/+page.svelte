@@ -1,168 +1,133 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fade } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
 	import { calculateStats } from '$lib/models/Stats';
-	import { createEmptyPlot, SIZE_X, SIZE_Y, type Plot } from '$lib/models/Plot';
+	import { createEmptyFloor } from '$lib/models/Floor';
 	import { Direction, rotateClockwise } from '$lib/models/Direction';
-	import { FLOORS } from '$lib/models/Floor';
-	import { getUrl, parseUrl } from '$lib/utils';
+	import { FURNITURE_TYPES, type FurnitureType } from '$lib/models/FurnitureType';
+	import { createEmptyHouse, MAX_FLOOR, MIN_FLOOR } from '$lib/models/House';
+	import { ROOM_TYPES, type RoomType } from '$lib/models/RoomType';
 
-	import Cell from '$lib/components/cell.svelte';
+	import { serializeHouse, parseHouse } from '$lib/utils';
+
 	import Errors from '$lib/components/errors.svelte';
-	import FloorControls from '$lib/components/floor-controls.svelte';
 	import GettingStarted from '$lib/components/getting-started.svelte';
-	import Popover from '$lib/components/popover.svelte';
 	import Requirements from '$lib/components/requirements.svelte';
 	import Rooms from '$lib/components/rooms.svelte';
 	import Tabs from '$lib/components/tabs.svelte';
-	import type { Room } from '$lib/models/Room';
-	import { ROOM_TYPES } from '$lib/models/RoomType';
+	import Floor from '$lib/components/floor.svelte';
 
-	let floorIndex = Math.max(0, FLOORS.indexOf(0));
-	$: floor = FLOORS[floorIndex];
-
-	let plots: Plot[] = [];
-	$: plot = plots[floorIndex] || [];
-
-	$: stats = calculateStats(plots);
+	let house = createEmptyHouse();
+	let floorIndex = Math.abs(MIN_FLOOR);
+	$: floor = house.floors[floorIndex];
+	$: stats = calculateStats(house);
 
 	onMount(() => {
-		plots = parseUrl($page.url.searchParams);
+		house = parseHouse($page.url.searchParams);
 	});
 
-	let selX: number | null = null;
-	let selY: number | null = null;
-	$: selectedRoom = selX !== null && selY !== null ? plot[selY][selX] : null;
-	$: setSelected = (e: CustomEvent<{ x: number | null; y: number | null }>) => {
-		selX = e.detail.x;
-		selY = e.detail.y;
-	};
-	$: setRoom = (e: CustomEvent<{ x: number; y: number; typeKey: string | null }>) => {
-		if (e.detail.typeKey === null) {
-			plots[floorIndex][e.detail.y][e.detail.x] = null;
+	const changeRoom = (e: CustomEvent<{ x: number; y: number; type: RoomType | null }>) => {
+		if (e.detail.type === null) {
+			house.floors[floorIndex].rooms[e.detail.y][e.detail.x] = null;
 		} else {
-			plots[floorIndex][e.detail.y][e.detail.x] = {
+			house.floors[floorIndex].rooms[e.detail.y][e.detail.x] = {
+				floor: house.floors[floorIndex],
 				x: e.detail.x,
 				y: e.detail.y,
-				typeKey: e.detail.typeKey,
+				type: e.detail.type,
 				orientation: Direction.North,
-				furnitureKeys: {}
+				hotspots: new Array(e.detail.type.hotspots.length).map(() => null)
 			};
 		}
-		goto(`?${getUrl(plots)}`, { replaceState: true });
+		goto(`?${serializeHouse(house)}`, { replaceState: true });
 	};
-	$: rotateRoom = (e: CustomEvent<{ x: number; y: number }>) => {
-		const room = plots[floorIndex][e.detail.y][e.detail.x];
+	const rotateRoom = (e: CustomEvent<{ x: number; y: number }>) => {
+		const room = house.floors[floorIndex].rooms[e.detail.y][e.detail.x];
 		if (room) {
-			plots[floorIndex][e.detail.y][e.detail.x] = {
-				...room,
-				orientation: rotateClockwise(room.orientation)
-			};
-			goto(`?${getUrl(plots)}`, { replaceState: true });
+			room.orientation = rotateClockwise(room.orientation);
+			house.floors[floorIndex].rooms[e.detail.y][e.detail.x] = room;
+			goto(`?${serializeHouse(house)}`, { replaceState: true });
 		}
 	};
-	$: reset = () => {
+	const changeFurniture = (
+		e: CustomEvent<{ x: number; y: number; hotspotIndex: number; type: FurnitureType | null }>
+	) => {
+		const room = house.floors[floorIndex].rooms[e.detail.y][e.detail.x];
+		if (room) {
+			room.hotspots[e.detail.hotspotIndex] = e.detail.type;
+			goto(`?${serializeHouse(house)}`, { replaceState: true });
+		}
+	};
+	const reset = () => {
 		if (!confirm('Are you sure you want to delete all rooms on this floor?')) {
 			return;
 		}
-		plots[floorIndex] = createEmptyPlot();
-		goto(`?${getUrl(plots)}`, { replaceState: true });
+		house.floors[floorIndex] = createEmptyFloor(house, floor.num);
+		goto(`?${serializeHouse(house)}`, { replaceState: true });
 	};
-	$: setFurniture = (
-		e: CustomEvent<{ x: number; y: number; hotspotKey: string; furnitureKey: string | null }>
-	) => {
-		const room = plots[floorIndex][e.detail.y][e.detail.x];
-		if (!room) {
-			return;
+
+	const random = () => {
+		const newFloor = createEmptyFloor(house, floor.num);
+		for (let i = 0; i < 33; i++) {
+			const y = Math.floor(i / 7) + 1;
+			const x = (i % 7) + 1;
+			const type = ROOM_TYPES[Math.floor(Math.random() * ROOM_TYPES.length)];
+			newFloor.rooms[y][x] = {
+				floor: newFloor,
+				x,
+				y,
+				type,
+				hotspots: [FURNITURE_TYPES[0], FURNITURE_TYPES[0], FURNITURE_TYPES[0]],
+				orientation: Direction.North
+			};
 		}
-
-		room.furnitureKeys[e.detail.hotspotKey] = e.detail.furnitureKey;
-		goto(`?${getUrl(plots)}`, { replaceState: true });
-	};
-	$: getConnections = (x: number, y: number, room: Room | null): Direction[] => {
-		if (!room) {
-			return [];
-		}
-
-		const type = ROOM_TYPES[room.typeKey];
-		const neighbours: { [dir in Direction]: Room | null } = {
-			[Direction.North]: y === 0 ? null : plot[y - 1][x],
-			[Direction.East]: x >= SIZE_X - 1 ? null : plot[y][x + 1],
-			[Direction.South]: y >= SIZE_Y - 1 ? null : plot[y + 1][x],
-			[Direction.West]: x === 0 ? null : plot[y][x - 1]
-		};
-
-		const dirs: Direction[] = [];
-		for (const door of type.doors) {
-			const dir = rotateClockwise(door, room.orientation);
-			const neighbour = neighbours[dir];
-			if (!neighbour) {
-				continue;
-			}
-
-			const neighbourType = ROOM_TYPES[neighbour.typeKey];
-			for (const neighbourDoor of neighbourType.doors) {
-				// Rotate the neighbour's door +2 to get the opposite ones (our southern neighbour needs a door facing north)
-				const neighbourDir = rotateClockwise(neighbourDoor, neighbour.orientation + 2);
-				if (dir === neighbourDir) {
-					dirs.push(dir);
-					break;
-				}
-			}
-		}
-
-		return dirs;
+		house.floors[floorIndex] = newFloor;
+		goto(`?${serializeHouse(house)}`, { replaceState: true });
 	};
 </script>
 
 <div class="map">
-	{#key floor}
-		<div class="grid" transition:fade>
-			{#each plot as row, y}
-				<div class="row">
-					{#each row as room, x}
-						<Cell
-							{x}
-							{y}
-							{room}
-							selected={x === selX && y === selY}
-							below={plots[floorIndex - 1]?.[y][x]}
-							connections={getConnections(x, y, room)}
-							on:selected={setSelected}
-						/>
-					{/each}
-				</div>
-			{/each}
-
-			{#if selX !== null && selY !== null}
-				<Popover
-					{floor}
-					x={selX}
-					y={selY}
-					room={selectedRoom}
-					below={plots[floorIndex - 1]?.[selY][selX]}
-					above={plots[floorIndex + 1]?.[selY][selX]}
-					on:change={setRoom}
-					on:rotate={rotateRoom}
-					on:furniture={setFurniture}
-				/>
-			{/if}
-		</div>
+	{#key floorIndex}
+		<Floor
+			{floor}
+			below={house.floors[floorIndex - 1] || null}
+			above={house.floors[floorIndex + 1] || null}
+			on:changeRoomType={changeRoom}
+			on:rotateRoom={rotateRoom}
+			on:changeFurniture={changeFurniture}
+		/>
 	{/key}
 </div>
 
 <div class="sidebar">
-	<FloorControls
-		{floor}
-		price={stats.totalPrice}
-		minLvl={stats.levelRequirements[0]?.level}
-		extent={stats.extent}
-		on:change={(e) => (floorIndex = FLOORS.indexOf(e.detail.floor))}
-		on:reset={reset}
-	/>
+	<div class="floor-controls">
+		<button disabled={floor.num >= MAX_FLOOR} on:click|stopPropagation={() => floorIndex++}>
+			<i class="icofont-arrow-up" />
+		</button>
+		<select bind:value={floorIndex} on:change={(e) => (floorIndex = Number(e.currentTarget.value))}>
+			{#each house.floors as floor, index}
+				<option value={index}>Floor {floor.num}</option>
+			{/each}
+		</select>
+		<button disabled={floor.num <= MIN_FLOOR} on:click|stopPropagation={() => floorIndex--}>
+			<i class="icofont-arrow-down" />
+		</button>
+		<button on:click={reset}>
+			<i class="icofont-ui-delete" />
+		</button>
+
+		<div style:flex="1" />
+
+		<div><i class="icofont-money-bag" /> {stats.totalPrice}</div>
+		<div>•</div>
+		<div><i class="icofont-bars" /> {stats.levelRequirements[0]?.level || 0}</div>
+		<div>•</div>
+		<div><i class="icofont-drag" /> {stats.extent[0]}x{stats.extent[1]}</div>
+	</div>
+
+	<button on:click={random}>Random</button>
 
 	<Tabs tabs={['Getting Started', 'Errors', 'Requirements', 'Rooms']}>
 		<svelte:fragment let:tab>
@@ -173,7 +138,7 @@
 			{:else if tab === 'Requirements'}
 				<Requirements requirements={stats.levelRequirements} />
 			{:else if tab === 'Rooms'}
-				<Rooms rooms={plots.flat(2)} />
+				<Rooms rooms={house.floors.map((f) => f.rooms).flat(2)} />
 			{:else}
 				<p>Unknown tab {tab}</p>
 			{/if}
@@ -189,26 +154,19 @@
 		padding-bottom: min(100%, 100vh);
 	}
 
-	.grid {
-		display: flex;
-		flex-direction: column;
-		box-sizing: border-box;
-		border: 1px solid gray;
-		position: absolute;
-		top: 8px;
-		left: 8px;
-		right: 8px;
-		bottom: 8px;
-	}
-
-	.row {
-		flex: 1;
-		display: flex;
-		flex-direction: row;
-	}
-
 	.sidebar {
 		flex: 1;
 		padding: 8px;
+	}
+
+	.floor-controls {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 16px;
+
+		> *:not(:last-child) {
+			margin-right: 8px;
+		}
 	}
 </style>

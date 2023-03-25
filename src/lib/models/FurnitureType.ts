@@ -1,12 +1,14 @@
 export interface FurnitureType {
+	key: string;
 	name: string;
 	minLvl: number;
 	exp: number;
 	materials: { [key: string]: number };
 }
 
-export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
-	exit_portal: {
+export const FURNITURE_TYPES: FurnitureType[] = [
+	{
+		key: 'exit_portal',
 		name: 'Exit Portal',
 		minLvl: 1,
 		exp: 100,
@@ -14,7 +16,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			iron_bar: 10
 		}
 	},
-	decorative_rock: {
+	{
+		key: 'decorative_rock',
 		name: 'Decorative Rock',
 		minLvl: 5,
 		exp: 100,
@@ -22,7 +25,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			limestone_brick: 5
 		}
 	},
-	pond: {
+	{
+		key: 'pond',
 		name: 'Pond',
 		minLvl: 10,
 		exp: 100,
@@ -30,7 +34,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			soft_clay: 10
 		}
 	},
-	imp_statue: {
+	{
+		key: 'imp_statue',
 		name: 'Imp Statue',
 		minLvl: 15,
 		exp: 150,
@@ -39,7 +44,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			soft_clay: 5
 		}
 	},
-	dungeon_entrance: {
+	{
+		key: 'dungeon_entrance',
 		name: 'Dungeon Entrance',
 		minLvl: 70,
 		exp: 500,
@@ -47,7 +53,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			marble_block: 1
 		}
 	},
-	plant: {
+	{
+		key: 'plant',
 		name: 'Plant',
 		minLvl: 1,
 		exp: 31,
@@ -55,7 +62,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			bagged_plant_1: 1
 		}
 	},
-	small_fern: {
+	{
+		key: 'small_fern',
 		name: 'Small Fern',
 		minLvl: 6,
 		exp: 70,
@@ -63,7 +71,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			bagged_plant_2: 1
 		}
 	},
-	fern: {
+	{
+		key: 'fern',
 		name: 'Fern',
 		minLvl: 12,
 		exp: 100,
@@ -71,7 +80,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			bagged_plant_3: 1
 		}
 	},
-	dock_leaf: {
+	{
+		key: 'dock_leaf',
 		name: 'Dock Leaf',
 		minLvl: 1,
 		exp: 31,
@@ -79,7 +89,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			bagged_plant_1: 1
 		}
 	},
-	thistle: {
+	{
+		key: 'thistle',
 		name: 'Thistle',
 		minLvl: 6,
 		exp: 70,
@@ -87,7 +98,8 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			bagged_plant_2: 1
 		}
 	},
-	reeds: {
+	{
+		key: 'reeds',
 		name: 'Reeds',
 		minLvl: 12,
 		exp: 100,
@@ -95,4 +107,20 @@ export const FURNITURE_TYPES: { [key: string]: FurnitureType } = {
 			bagged_plant_3: 1
 		}
 	}
+];
+
+const map: Map<string, FurnitureType> = new Map();
+for (const type of FURNITURE_TYPES) {
+	if (map.has(type.key)) {
+		throw new Error(`Duplicate furniture type ${type.key}`);
+	}
+	map.set(type.key, type);
+}
+
+export const getFurnitureTypeByKey = (key: string): FurnitureType => {
+	const type = map.get(key);
+	if (!type) {
+		throw new Error(`Unknown furniture type ${key}`);
+	}
+	return type;
 };

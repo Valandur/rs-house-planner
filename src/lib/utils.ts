@@ -1,71 +1,85 @@
-import { createEmptyPlot, SIZE_X, type Plot } from './models/Plot';
-import { FLOORS } from './models/Floor';
+import { createEmptyHouse, type House } from './models/House';
+import { FURNITURE_TYPES, type FurnitureType } from './models/FurnitureType';
+import { ROOM_TYPES } from './models/RoomType';
+import { SIZE_X, type Floor } from './models/Floor';
 import type { Room } from './models/Room';
 
-const roomToString = (room: Room | null, index: number): string | null => {
+const serializeRoom = (room: Room | null, index: number): string | null => {
 	if (!room) {
 		return null;
 	}
 
-	const furnitureStr = Object.entries(room.furnitureKeys)
-		.filter(([, value]) => !!value)
-		.map(([key, value]) => `${key}:${value}`)
+	const furnitureStr = room.hotspots
+		.map((furnitureType) => (furnitureType ? FURNITURE_TYPES.indexOf(furnitureType) : ''))
 		.join('-');
-	return `${index}-${room.typeKey}-${room.orientation}-${furnitureStr}`;
+	return `${index}-${ROOM_TYPES.indexOf(room.type)}-${room.orientation}-${furnitureStr}`;
 };
 
-export const getUrl = (plots: Plot[]): URLSearchParams => {
+export const serializeHouse = (house: House): URLSearchParams => {
 	const query = new URLSearchParams();
 
-	for (let i = 0; i < FLOORS.length; i++) {
-		const rooms = plots[i]
+	for (const floor of house.floors) {
+		const rooms = floor.rooms
 			.flat()
-			.map(roomToString)
+			.map(serializeRoom)
 			.filter((r) => !!r)
-			.join(',');
-		query.set(`f${FLOORS[i]}`, btoa(rooms));
+			.join('.');
+		query.set(`f${floor.num}`, rooms);
 	}
 
 	return query;
 };
 
-const stringToRoom = (str: string): Room => {
+const parseRoom = (floor: Floor, str: string): Room => {
 	const splits = str.split('-');
-	const furnitureKeys: { [key: string]: string } = {};
-	for (let i = 3; i < splits.length; i++) {
-		const parts = splits[i].split(':');
-		furnitureKeys[parts[0]] = parts[1];
-	}
 
 	const idx = Number(splits[0]);
 	const x = idx % SIZE_X;
 	const y = Math.floor(idx / SIZE_X);
+	const type = ROOM_TYPES[Number(splits[1])];
+	if (!type) {
+		throw new Error(`Unknown room type ${splits[1]}`);
+	}
+	const orientation = Number(splits[2]);
+
+	const hotspots: (FurnitureType | null)[] = [];
+	for (let i = 0; i < type.hotspots.length; i++) {
+		hotspots[i] = splits[i + 3] ? FURNITURE_TYPES[Number(splits[i + 3])] : null;
+	}
+
 	return {
+		floor,
 		x,
 		y,
-		typeKey: splits[1],
-		orientation: Number(splits[2]),
-		furnitureKeys
+		type,
+		orientation,
+		hotspots
 	};
 };
 
-export const parseUrl = (urlSearchParams: URLSearchParams): Plot[] => {
-	const plots: Plot[] = [];
+export const parseHouse = (urlSearchParams: URLSearchParams): House => {
+	const house: House = createEmptyHouse();
 
-	for (let i = 0; i < FLOORS.length; i++) {
-		const plot = createEmptyPlot();
-
-		const data = urlSearchParams.get(`f${FLOORS[i]}`);
-		if (data) {
-			const splits = atob(data).split(',');
-			for (const split of splits) {
-				const room = stringToRoom(split);
-				plot[room.y][room.x] = room;
-			}
+	for (const key of urlSearchParams.keys()) {
+		if (!key.startsWith('f')) {
+			continue;
 		}
 
-		plots.push(plot);
+		const num = Number(key.substring(1));
+		const floor = house.floors.find((f) => f.num === num);
+		if (!floor) {
+			throw new Error(`Unknown floor ${num}`);
+		}
+
+		const data = urlSearchParams.get(key);
+		if (data) {
+			const splits = data.split('.');
+			for (const split of splits) {
+				const room = parseRoom(floor, split);
+				floor.rooms[room.y][room.x] = room;
+			}
+		}
 	}
 
-	return plots;
+	return house;
 };

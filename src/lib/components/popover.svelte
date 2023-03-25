@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 
-	import { FURNITURE_TYPES } from '$lib/models/FurnitureType';
-	import { ROOM_TYPES, ROOM_TYPES_LIST } from '$lib/models/RoomType';
-	import { SIZE_X, SIZE_Y } from '$lib/models/Plot';
+	import { getFurnitureTypeByKey, type FurnitureType } from '$lib/models/FurnitureType';
+	import { getRoomTypeByKey, ROOM_TYPES, type RoomType } from '$lib/models/RoomType';
+	import { SIZE_X, SIZE_Y, type Floor } from '$lib/models/Floor';
 	import type { Room } from '$lib/models/Room';
 
 	import Tabs from './tabs.svelte';
@@ -13,32 +13,36 @@
 	const xRatio = 100 / SIZE_X;
 	const yRatio = 100 / SIZE_Y;
 
+	export let floor: Floor;
 	export let x: number;
 	export let y: number;
-	export let floor: number;
 	export let room: Room | null;
 	export let below: Room | null;
 	export let above: Room | null;
 
 	const dispatch = createEventDispatcher<{
-		change: { x: number; y: number; typeKey: string | null };
-		rotate: { x: number; y: number };
-		furniture: { x: number; y: number; hotspotKey: string; furnitureKey: string };
+		rotateRoom: { x: number; y: number };
+		changeRoomType: { x: number; y: number; type: RoomType | null };
+		changeFurniture: { x: number; y: number; hotspotIndex: number; type: FurnitureType | null };
 	}>();
 
-	$: change = (typeKey: string | null) => {
-		dispatch('change', { x, y, typeKey });
+	$: rotateRoom = () => {
+		dispatch('rotateRoom', { x, y });
 	};
-	$: rotate = () => {
-		dispatch('rotate', { x, y });
+	$: changeRomType = (typeKey: string | null) => {
+		dispatch('changeRoomType', { x, y, type: typeKey ? getRoomTypeByKey(typeKey) : null });
 	};
-	$: changeFurniture = (hotspotKey: string, furnitureKey: string) => {
-		dispatch('furniture', { x, y, hotspotKey, furnitureKey });
+	$: changeFurniture = (hotspotIndex: number, furnitureKey: string) => {
+		dispatch('changeFurniture', {
+			x,
+			y,
+			hotspotIndex,
+			type: furnitureKey ? getFurnitureTypeByKey(furnitureKey) : null
+		});
 	};
 
-	$: type = room ? ROOM_TYPES[room.typeKey] : null;
-	$: belowType = below ? ROOM_TYPES[below.typeKey] : null;
-	$: hotspots = type ? Object.entries(type.furnitureHotspots) : [];
+	$: types = [...ROOM_TYPES].sort((a, b) => a.name.localeCompare(b.name));
+	$: hotspots = room?.type.hotspots || [];
 
 	$: isTop = y < halfY;
 	$: isLeft = x < halfX;
@@ -48,10 +52,6 @@
 	$: right = !isLeft ? `${xRatio * (SIZE_X - x - 1)}%` : '';
 	$: maxHeight = `calc(${(isTop ? SIZE_Y - y - 1 : y) * yRatio}% - 4px)`;
 	$: maxWidth = `calc(${(isLeft ? SIZE_X - x - 1 : x) * xRatio}% - 4px)`;
-
-	const getFurnitureOptions = (keys: string[]) => {
-		return keys.map((key) => [key, FURNITURE_TYPES[key]] as const);
-	};
 </script>
 
 <div
@@ -64,38 +64,45 @@
 	style:maxWidth
 >
 	<div class="content">
-		{#if floor > 0 && (!below || belowType?.open)}
+		{#if floor.num > 0 && (!below || below.type?.open)}
 			<p>There is no supporting room below!</p>
 		{:else}
 			<div>
-				<select value={room?.typeKey || ''} on:change={(e) => change(e.currentTarget.value)}>
+				<select
+					value={room?.type.key || ''}
+					on:change={(e) => changeRomType(e.currentTarget.value)}
+				>
 					<option value="" disabled selected>Pick a room...</option>
-					{#each ROOM_TYPES_LIST as [key, type]}
-						{@const disabled = type.floors && !type.floors.includes(floor)}
-						<option {disabled} value={key}>
+					{#each types as type}
+						{@const disabled = type.floors && !type.floors.includes(floor.num)}
+						<option {disabled} value={type.key}>
 							{type.name}{disabled ? ` (floors: ${type.floors?.join(', ')})` : ''}
 						</option>
 					{/each}
 				</select>
 
 				{#if room}
-					<button class="rotate" on:click|stopPropagation={rotate}>
+					<button class="rotate" on:click|stopPropagation={rotateRoom}>
 						<i class="icofont-ui-rotation" />
 					</button>
-					<button class="remove" disabled={!!above} on:click|stopPropagation={() => change(null)}>
+					<button
+						class="remove"
+						disabled={!!above}
+						on:click|stopPropagation={() => changeRomType(null)}
+					>
 						<i class="icofont-ui-delete" />
 					</button>
 				{/if}
 			</div>
 
-			{#if floor >= 0 && above}
+			{#if floor.num >= 0 && above}
 				<div>
 					<i class="icofont-info" />
 					<p>This room is supportting the one above it!</p>
 				</div>
 			{/if}
 
-			{#if room && type}
+			{#if room}
 				<Tabs tabs={['Details', 'Furniture']} inverted>
 					<svelte:fragment let:tab>
 						{#if tab === 'Details'}
@@ -103,32 +110,32 @@
 								<tbody>
 									<tr>
 										<td>Name</td>
-										<td>{type.name}</td>
+										<td>{room.type.name}</td>
 									</tr>
 									<tr>
 										<td>Cost</td>
-										<td>{type.cost}</td>
+										<td>{room.type.cost}</td>
 									</tr>
 									<tr>
 										<td>Min. Level</td>
-										<td>{type.minLvl}</td>
+										<td>{room.type.minLvl}</td>
 									</tr>
 								</tbody>
 							</table>
 						{:else if tab === 'Furniture'}
 							<table>
 								<tbody>
-									{#each hotspots as [hotspotKey, hotspot]}
+									{#each hotspots as hotspot, i}
 										<tr>
 											<td>{hotspot.name}</td>
 											<td>
 												<select
-													value={room.furnitureKeys[hotspotKey] || ''}
-													on:change={(e) => changeFurniture(hotspotKey, e.currentTarget.value)}
+													value={room.hotspots[i]?.key || ''}
+													on:change={(e) => changeFurniture(i, e.currentTarget.value)}
 												>
 													<option value="">None</option>
-													{#each getFurnitureOptions(hotspot.optionKeys) as [furnitureKey, furnitureType]}
-														<option value={furnitureKey}>{furnitureType.name}</option>
+													{#each hotspot.options.map( (o) => getFurnitureTypeByKey(o) ) as furnitureType}
+														<option value={furnitureType.key}>{furnitureType.name}</option>
 													{/each}
 												</select>
 											</td>
