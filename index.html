@@ -6,17 +6,17 @@
 		<meta name="viewport" content="width=device-width" />
 		<title>RS - House Planner</title>
 		<meta http-equiv="content-security-policy" content="">
-		<link href="./_app/immutable/assets/_layout.58b7ed32.css" rel="stylesheet">
-		<link href="./_app/immutable/assets/_page.03559437.css" rel="stylesheet">
-		<link rel="modulepreload" href="./_app/immutable/entry/start.1122704d.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/index.df43da31.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/singletons.09103cd1.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/app.e5d98ab7.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/_layout.svelte.20520ff5.js">
+		<link href="./_app/immutable/assets/_layout.f3bacb28.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/_page.76aa0790.css" rel="stylesheet">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.b1247f64.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/index.83a7776e.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/singletons.f06d21c9.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.f1f921cd.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/_layout.svelte.06ae4a15.js">
 		<link rel="modulepreload" href="./_app/immutable/entry/_layout.ts.984db11e.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/_layout.da46b06b.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/_page.svelte.d912ed38.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/stores.57896892.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/_page.svelte.cbb80bdd.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/stores.003abf68.js">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">
@@ -211,15 +211,19 @@
 		<div class="svelte-1xkp19y">•</div>
 		<div class="svelte-1xkp19y"><i class="icofont-drag"></i> 0x0</div></div>
 
-	<button>Random</button>
-
-	<div class="container svelte-44ndb8"><div class="navigation"><button class="svelte-44ndb8 active">Getting Started
+	<div class="container svelte-44ndb8"><div class="navigation"><button class="svelte-44ndb8 active">General
 			</button><button class="svelte-44ndb8">Errors
 			</button><button class="svelte-44ndb8">Requirements
 			</button><button class="svelte-44ndb8">Rooms
 			</button></div>
-	<div class="content svelte-44ndb8"><div class="tab svelte-44ndb8"><ul class="svelte-ukzczf"><li>Click a cell to the left to place a new room</li>
-</ul></div></div>
+	<div class="content svelte-44ndb8"><div class="tab svelte-44ndb8"><h2 class="svelte-14wozrp">Getting started</h2>
+<ul class="svelte-14wozrp"><li>Click a cell to the left to place a new room</li></ul>
+
+<h2 class="svelte-14wozrp">Saved houses</h2>
+<div class="houses-list svelte-14wozrp"><div class="svelte-14wozrp"><div class="name svelte-14wozrp"><input type="text" value="Default"></div>
+		<div class="svelte-14wozrp"><button><i class="icofont-save"></i></button></div></div>
+	
+</div></div></div>
 </div>
 </div>
 </div>
@@ -228,7 +232,7 @@
 			
 			<script>
 				{
-					__sveltekit_1q3tqil = {
+					__sveltekit_j46o3b = {
 						env: {},
 						base: new URL(".", location).pathname.slice(0, -1),
 						element: document.currentScript.parentElement
@@ -237,10 +241,10 @@
 					const data = [null,null];
 
 					Promise.all([
-						import("./_app/immutable/entry/start.1122704d.js"),
-						import("./_app/immutable/entry/app.e5d98ab7.js")
+						import("./_app/immutable/entry/start.b1247f64.js"),
+						import("./_app/immutable/entry/app.f1f921cd.js")
 					]).then(([kit, app]) => {
-						kit.start(app, __sveltekit_1q3tqil.element, {
+						kit.start(app, __sveltekit_j46o3b.element, {
 							node_ids: [0, 2],
 							data,
 							form: null,
