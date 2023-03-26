@@ -1,4 +1,4 @@
-import { rotateClockwise, type Direction } from './Direction';
+import { Direction, rotateClockwise } from './Direction';
 import type { Door } from './Door';
 import type { Floor } from './Floor';
 import type { FurnitureType } from './FurnitureType';
@@ -15,4 +15,15 @@ export interface Room {
 
 export const getRotatedDoors = (room: Room | null): Door[] => {
 	return room?.type.doors.map((door) => rotateClockwise(door, room.orientation)) || [];
+};
+
+export const createRoom = (floor: Floor, x: number, y: number, type: RoomType): Room => {
+	return {
+		floor,
+		x,
+		y,
+		type,
+		orientation: Direction.North,
+		hotspots: new Array(type.hotspots.length).map(() => null)
+	};
 };

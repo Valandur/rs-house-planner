@@ -21,18 +21,18 @@
 	export let above: Room | null;
 
 	const dispatch = createEventDispatcher<{
+		close: {};
 		rotateRoom: { x: number; y: number };
 		changeRoomType: { x: number; y: number; type: RoomType | null };
 		changeFurniture: { x: number; y: number; hotspotIndex: number; type: FurnitureType | null };
 	}>();
 
-	$: rotateRoom = () => {
-		dispatch('rotateRoom', { x, y });
-	};
-	$: changeRomType = (typeKey: string | null) => {
+	const close = () => dispatch('close');
+	const rotateRoom = () => dispatch('rotateRoom', { x, y });
+	const changeRomType = (typeKey: string | null) => {
 		dispatch('changeRoomType', { x, y, type: typeKey ? getRoomTypeByKey(typeKey) : null });
 	};
-	$: changeFurniture = (hotspotIndex: number, furnitureKey: string) => {
+	const changeFurniture = (hotspotIndex: number, furnitureKey: string) => {
 		dispatch('changeFurniture', {
 			x,
 			y,
@@ -82,17 +82,20 @@
 				</select>
 
 				{#if room}
-					<button class="rotate" on:click|stopPropagation={rotateRoom}>
+					<button on:click|stopPropagation={rotateRoom}>
 						<i class="icofont-ui-rotation" />
 					</button>
 					<button
-						class="remove"
-						disabled={!!above}
+						disabled={floor.num >= 0 && !!above}
 						on:click|stopPropagation={() => changeRomType(null)}
 					>
 						<i class="icofont-ui-delete" />
 					</button>
 				{/if}
+
+				<button on:click|stopPropagation={close}>
+					<i class="icofont-ui-close" />
+				</button>
 			</div>
 
 			{#if floor.num >= 0 && above}
@@ -103,7 +106,7 @@
 			{/if}
 
 			{#if room}
-				<Tabs tabs={['Details', 'Furniture']} inverted>
+				<Tabs tabs={['Details', 'Hotspots']} inverted>
 					<svelte:fragment let:tab>
 						{#if tab === 'Details'}
 							<table>
@@ -122,7 +125,7 @@
 									</tr>
 								</tbody>
 							</table>
-						{:else if tab === 'Furniture'}
+						{:else if tab === 'Hotspots'}
 							<table>
 								<tbody>
 									{#each hotspots as hotspot, i}

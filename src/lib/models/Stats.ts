@@ -33,6 +33,7 @@ export const calculateStats = (house: House): Stats => {
 	const errors: string[] = [];
 	const levelRequirements: LevelRequirement[] = [];
 
+	let hasGarden = false;
 	for (const room of rooms) {
 		totalPrice += room.type.cost;
 		maxRoom = maxRoom && room.type.minLvl <= maxRoom.type.minLvl ? maxRoom : room;
@@ -40,6 +41,14 @@ export const calculateStats = (house: House): Stats => {
 		maxX = Math.max(maxX, room.x);
 		minY = Math.min(minY, room.y);
 		maxY = Math.max(maxY, room.y);
+		if (room.type.key === 'garden' || room.type.key === 'formal_garden') {
+			hasGarden = true;
+		}
+	}
+	if (!hasGarden) {
+		errors.push(
+			`You have must have at least one 'Garden' or 'Formal Garden' to place an exit portal!`
+		);
 	}
 
 	if (maxRoom) {

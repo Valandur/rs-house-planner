@@ -8,8 +8,8 @@ export interface House {
 	floors: Floor[];
 }
 
-export const createEmptyHouse = (): House => {
-	const house: House = { name: 'Default', floors: [] };
+export const createEmptyHouse = (name = 'Default'): House => {
+	const house: House = { name, floors: [] };
 	for (let i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
 		house.floors.push(createEmptyFloor(house, i));
 	}

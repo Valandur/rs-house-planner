@@ -17,6 +17,7 @@ const serializeRoom = (room: Room | null, index: number): string | null => {
 
 export const serializeHouse = (house: House): URLSearchParams => {
 	const query = new URLSearchParams();
+	query.set('n', house.name);
 
 	for (const floor of house.floors) {
 		const rooms = floor.rooms
@@ -58,7 +59,8 @@ const parseRoom = (floor: Floor, str: string): Room => {
 };
 
 export const parseHouse = (urlSearchParams: URLSearchParams): House => {
-	const house: House = createEmptyHouse();
+	const name = urlSearchParams.get('n') || undefined;
+	const house: House = createEmptyHouse(name);
 
 	for (const key of urlSearchParams.keys()) {
 		if (!key.startsWith('f')) {

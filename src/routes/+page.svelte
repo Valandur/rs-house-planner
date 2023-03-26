@@ -4,16 +4,17 @@
 	import { goto } from '$app/navigation';
 
 	import { calculateStats } from '$lib/models/Stats';
-	import { createEmptyFloor } from '$lib/models/Floor';
-	import { Direction, rotateClockwise } from '$lib/models/Direction';
-	import { FURNITURE_TYPES, type FurnitureType } from '$lib/models/FurnitureType';
-	import { createEmptyHouse, MAX_FLOOR, MIN_FLOOR } from '$lib/models/House';
-	import { ROOM_TYPES, type RoomType } from '$lib/models/RoomType';
+	import { createEmptyHouse, MAX_FLOOR, MIN_FLOOR, type House } from '$lib/models/House';
+	import { createRoom } from '$lib/models/Room';
+	import { rotateClockwise } from '$lib/models/Direction';
+	import { getRoomTypeByKey, type RoomType } from '$lib/models/RoomType';
+	import { SIZE_X, SIZE_Y } from '$lib/models/Floor';
+	import type { FurnitureType } from '$lib/models/FurnitureType';
 
 	import { serializeHouse, parseHouse } from '$lib/utils';
 
 	import Errors from '$lib/components/errors.svelte';
-	import GettingStarted from '$lib/components/getting-started.svelte';
+	import General from '$lib/components/general.svelte';
 	import Requirements from '$lib/components/requirements.svelte';
 	import Rooms from '$lib/components/rooms.svelte';
 	import Tabs from '$lib/components/tabs.svelte';
@@ -25,21 +26,30 @@
 	$: stats = calculateStats(house);
 
 	onMount(() => {
-		house = parseHouse($page.url.searchParams);
+		if ($page.url.search) {
+			house = parseHouse($page.url.searchParams);
+		} else {
+			house.floors[1].rooms[4][4] = createRoom(house.floors[1], 4, 4, getRoomTypeByKey('garden'));
+		}
 	});
 
+	const open = (e: CustomEvent<{ house: House }>) => {
+		house = e.detail.house;
+		goto(`?${serializeHouse(house)}`, { replaceState: true });
+	};
+	const save = (e: CustomEvent<{ house: House }>) => {
+		goto(`?${serializeHouse(house)}`, { replaceState: true });
+	};
 	const changeRoom = (e: CustomEvent<{ x: number; y: number; type: RoomType | null }>) => {
 		if (e.detail.type === null) {
 			house.floors[floorIndex].rooms[e.detail.y][e.detail.x] = null;
 		} else {
-			house.floors[floorIndex].rooms[e.detail.y][e.detail.x] = {
-				floor: house.floors[floorIndex],
-				x: e.detail.x,
-				y: e.detail.y,
-				type: e.detail.type,
-				orientation: Direction.North,
-				hotspots: new Array(e.detail.type.hotspots.length).map(() => null)
-			};
+			house.floors[floorIndex].rooms[e.detail.y][e.detail.x] = createRoom(
+				house.floors[floorIndex],
+				e.detail.x,
+				e.detail.y,
+				e.detail.type
+			);
 		}
 		goto(`?${serializeHouse(house)}`, { replaceState: true });
 	};
@@ -64,26 +74,14 @@
 		if (!confirm('Are you sure you want to delete all rooms on this floor?')) {
 			return;
 		}
-		house.floors[floorIndex] = createEmptyFloor(house, floor.num);
-		goto(`?${serializeHouse(house)}`, { replaceState: true });
-	};
-
-	const random = () => {
-		const newFloor = createEmptyFloor(house, floor.num);
-		for (let i = 0; i < 33; i++) {
-			const y = Math.floor(i / 7) + 1;
-			const x = (i % 7) + 1;
-			const type = ROOM_TYPES[Math.floor(Math.random() * ROOM_TYPES.length)];
-			newFloor.rooms[y][x] = {
-				floor: newFloor,
-				x,
-				y,
-				type,
-				hotspots: [FURNITURE_TYPES[0], FURNITURE_TYPES[0], FURNITURE_TYPES[0]],
-				orientation: Direction.North
-			};
+		for (let y = 0; y < SIZE_Y; y++) {
+			for (let x = 0; x < SIZE_X; x++) {
+				// Only delete rooms that aren't supporting anything
+				if (house.floors[floorIndex].num < 0 || !house.floors[floorIndex + 1]?.rooms[y][x]) {
+					house.floors[floorIndex].rooms[y][x] = null;
+				}
+			}
 		}
-		house.floors[floorIndex] = newFloor;
 		goto(`?${serializeHouse(house)}`, { replaceState: true });
 	};
 </script>
@@ -127,12 +125,10 @@
 		<div><i class="icofont-drag" /> {stats.extent[0]}x{stats.extent[1]}</div>
 	</div>
 
-	<button on:click={random}>Random</button>
-
-	<Tabs tabs={['Getting Started', 'Errors', 'Requirements', 'Rooms']}>
+	<Tabs tabs={['General', 'Errors', 'Requirements', 'Rooms']}>
 		<svelte:fragment let:tab>
-			{#if tab === 'Getting Started'}
-				<GettingStarted />
+			{#if tab === 'General'}
+				<General {house} on:open={open} on:save={save} />
 			{:else if tab === 'Errors'}
 				<Errors errors={stats.errors} />
 			{:else if tab === 'Requirements'}

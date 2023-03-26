@@ -16,7 +16,7 @@
 	let selY: number | null = null;
 	$: selRoom = selX !== null && selY !== null ? floor.rooms[selY][selX] : null;
 
-	const setSelected = (x: number, y: number) => {
+	const setSelected = (x: number | null, y: number | null) => {
 		selX = x;
 		selY = y;
 	};
@@ -79,6 +79,7 @@
 			on:changeRoomType
 			on:rotateRoom
 			on:changeFurniture
+			on:close={() => setSelected(null, null)}
 		/>
 	{/if}
 </div>
